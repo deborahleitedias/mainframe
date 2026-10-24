@@ -1,0 +1,40 @@
+MAINFRAME LOCAL DO CURSO
+========================
+
+O que e: um ambiente que imita o z/OS no seu computador. Voce escreve JCL
+e COBOL, submete o job e ve a saida no spool, como no mainframe.
+
+Pre-requisito: GnuCOBOL 3.2 instalado (instalador do usuario).
+
+COMO USAR
+1. Descompacte esta pasta em C:\mainframe (caminho curto, sem acentos).
+2. No VS Code: File > Open Folder > C:\mainframe.
+3. Para submeter um job: abra o JCL e aperte Ctrl+Shift+B.
+   (ou, no terminal: SUBMIT jcl\ALOCAR.jcl)
+4. A saida do job aparece em spool\<JOB>_<numero>:
+   01-JESMSGLG, 02-JESJCL, 03-JESYSMSG e as saidas dos steps.
+5. Os datasets ficam em catalogo\. Uma biblioteca (PDS) e uma pasta;
+   cada membro e um arquivo dentro dela.
+6. Para ver um dataset registro por registro (como o browse do ISPF):
+   VER ALUNO.FATURA.TRANS.DIA
+
+PRIMEIROS PASSOS DO PROJETO
+1. Submeta jcl\ALOCAR.jcl   (cria as bibliotecas e os arquivos)
+2. Copie os arquivos da pasta jcl para catalogo\ALUNO.FATURA.JCL
+   e os da pasta copybooks para catalogo\ALUNO.FATURA.COPY
+   (e o "Upload Member": arraste os arquivos para a pasta no VS Code)
+3. Submeta jcl\CARREGA.jcl  (carrega a massa de dados)
+4. Submeta o DEFGDG da sua FATURA.JCL (cria as bases dos GDGs)
+
+A pasta cobol traz o FATJUROS, o primeiro programa do curso.
+
+SEU USUARIO
+O usuario padrao e ALUNO (o &SYSUID dos JCLs). Para mudar, edite
+sistema\config.txt (USUARIO=, ate 7 letras) ANTES de rodar o ALOCAR.
+
+O QUE FUNCIONA
+JOB, EXEC PGM=, EXEC IGYWCL (compilacao), DD, SET, IF/THEN/ELSE/ENDIF,
+COND, IEFBR14, IEBGENER, SORT (via GCSORT), IDCAMS (DEFINE GDG, DELETE,
+REPRO, LISTCAT, SET MAXCC), GDG com (+1)/(0)/(-1) e programas COBOL.
+Mensagens com prefixo SIM sao do simulador e nao existem no z/OS.
+Db2 (IKJEFT01) e TSO nao existem neste ambiente.

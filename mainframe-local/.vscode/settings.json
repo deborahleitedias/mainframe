@@ -1,0 +1,8 @@
+{
+  "editor.rulers": [7, 72],
+  "[plaintext]": {
+    "editor.wordWrap": "wordWrapColumn",
+    "editor.wordWrapColumn": 80
+  },
+  "files.exclude": { "**/.atrib": true, "sistema/work": true }
+}

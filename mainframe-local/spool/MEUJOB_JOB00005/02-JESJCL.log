@@ -1,0 +1,24 @@
+        1 //MEUJOB   JOB ,'FATURA NOTURNA',NOTIFY=&SYSUID,
+          //             CLASS=A,MSGCLASS=X
+          //*
+        2 //STEP005  EXEC PGM=???
+        3 //BKPANT   DD DSN=&SYSUID..FATURA.TRANS.BKP,DISP=(MOD,DELETE),
+          //            SPACE=(TRK,(1,1)),RECFM=FB,LRECL=80
+          //*
+        4 //STEP010  EXEC PGM=IEBGENER
+        5 //SYSPRINT DD SYSOUT=*
+        6 //SYSIN    DD DUMMY
+        7 //SYSUT1   DD DSN=&SYSUID..FATURA.TRANS.DIA,DISP=SHR
+        8 //SYSUT2   DD DSN=&SYSUID..FATURA.TRANS.BKP,DISP=(NEW,CATLG,DELETE),
+          //            SPACE=(TRK,(5,5),RLSE),RECFM=FB,LRECL=80,BLKSIZE=0
+          //*
+        9 // IF (STEP10.RC = 0) THEN
+       10 //STEP020  EXEC PGM=SORT
+       11 //SYSOUT   DD SYSOUT=*
+       12 //SORTIN   DD DSN=&SYSUID..FATURA.TRANS.DIA,DISP=SHR
+       13 //SORTOUT  DD DSN=&SYSUID..FATURA.TRANS.ORDEN(+1),
+          //            DISP=(NEW,CATLG,DELETE),
+          //            SPACE=(TRK,(5,5),RLSE),RECFM=FB,LRECL=80,BLKSIZE=0
+       14 //SYSIN    DD *
+          /*
+       15 // ENDIF

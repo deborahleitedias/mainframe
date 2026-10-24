@@ -1,0 +1,6 @@
+USUARIO=ALUNO
+COBC=cobc
+GCSORT=gcsort
+RUNNER=
+EXE=.exe
+MOD=.dll

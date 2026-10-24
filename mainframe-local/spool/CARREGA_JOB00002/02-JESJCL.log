@@ -1,0 +1,24 @@
+        1 //CARREGA  JOB ,'FATURA NOTURNA',NOTIFY=&SYSUID,
+          //             CLASS=A,MSGCLASS=X
+          //*--------------------------------------------------------------------
+          //* CARGA DA MASSA DO PROJETO NOS DATASETS CRIADOS PELO ALOCAR.
+          //* RODAR UMA VEZ, DEPOIS DO ALOCAR. OS DADOS VEM NO PROPRIO JOB (DD *).
+          //*--------------------------------------------------------------------
+        2 //STEP010  EXEC PGM=IEBGENER
+        3 //SYSPRINT DD SYSOUT=*
+        4 //SYSIN    DD DUMMY
+        5 //SYSUT2   DD DSN=&SYSUID..FATURA.TRANS.DIA,DISP=OLD
+        6 //SYSUT1   DD *
+          /*
+        7 //STEP020  EXEC PGM=IEBGENER
+        8 //SYSPRINT DD SYSOUT=*
+        9 //SYSIN    DD DUMMY
+       10 //SYSUT2   DD DSN=&SYSUID..FATURA.PAGTOS.DIA,DISP=OLD
+       11 //SYSUT1   DD *
+          /*
+       12 //STEP030  EXEC PGM=IEBGENER
+       13 //SYSPRINT DD SYSOUT=*
+       14 //SYSIN    DD DUMMY
+       15 //SYSUT2   DD DSN=&SYSUID..FATURA.FATURAS.ABERTO,DISP=OLD
+       16 //SYSUT1   DD *
+          /*

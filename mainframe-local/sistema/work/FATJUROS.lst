@@ -1,0 +1,109 @@
+GnuCOBOL 3.3-dev.0      sistema\work\FATJURO Fri Oct 23 2026 19:42:24  Page 0001
+
+LINE    PG/LN  A...B............................................................
+
+000001        *================================================================*
+000002        * PROGRAMA : FATJUROS                                            *
+000003        * AULA     : 5 - COBOL I, ANATOMIA DE UM PROGRAMA                *
+000004        * OBJETIVO : CALCULAR O TOTAL DA FATURA DE UM CLIENTE, COM MULTA *
+000005        *            E JUROS SOBRE O SALDO ANTERIOR EM ATRASO.           *
+000006        *            TRADUCAO DIRETA DO PSEUDOCODIGO DA AULA 1.          *
+000007        * REGRAS   : MULTA DE 2% SOBRE O SALDO EM ATRASO.                *
+000008        *            JUROS DE 1% AO MES, PROPORCIONAIS AOS DIAS DE       *
+000009        *            ATRASO (1% / 30 POR DIA).                           *
+000010        * PROJETO  : FATURA NOTURNA - DADOS FICTICIOS                    *
+000011        *================================================================*
+000012         IDENTIFICATION DIVISION.
+000013         PROGRAM-ID. FATJUROS.
+000014
+000015         ENVIRONMENT DIVISION.
+000016
+000017         DATA DIVISION.
+000018         WORKING-STORAGE SECTION.
+000019        *--- ENTRADAS (VALORES FIXOS NESTA AULA; ARQUIVOS NA AULA 7) ----*
+000020         01  WS-COMPRAS.
+000021             05  WS-COMPRA-1            PIC 9(07)V99 VALUE 152.30.
+000022             05  WS-COMPRA-2            PIC 9(07)V99 VALUE 89.90.
+000023             05  WS-COMPRA-3            PIC 9(07)V99 VALUE 1200.00.
+000024             05  WS-COMPRA-4            PIC 9(07)V99 VALUE 45.50.
+000025             05  WS-COMPRA-5            PIC 9(07)V99 VALUE 310.00.
+000026         01  WS-SALDO-ANTERIOR          PIC 9(07)V99 VALUE 500.00.
+000027         01  WS-DIAS-ATRASO             PIC 9(03)    VALUE 10.
+000028         01  WS-LIMITE                  PIC 9(07)V99 VALUE 1000.00.
+000029
+000030        *--- CONSTANTES DE NEGOCIO --------------------------------------*
+000031         01  WS-TAXA-MULTA              PIC V9(04)   VALUE .0200.
+000032         01  WS-TAXA-JUROS-MES          PIC V9(04)   VALUE .0100.
+000033
+000034        *--- AREAS DE CALCULO -------------------------------------------*
+000035         01  WS-TOTAL-COMPRAS           PIC 9(09)V99 VALUE ZERO.
+000036         01  WS-MULTA                   PIC 9(07)V99 VALUE ZERO.
+000037         01  WS-JUROS                   PIC 9(07)V99 VALUE ZERO.
+000038         01  WS-TOTAL-FATURA            PIC 9(09)V99 VALUE ZERO.
+000039         01  WS-QTD-ACIMA-LIMITE        PIC 9(02)    VALUE ZERO.
+000040
+000041        *--- CAMPOS EDITADOS PARA EXIBICAO ------------------------------*
+000042         01  WS-VALOR-EDITADO           PIC ZZZ,ZZZ,ZZ9.99.
+000043
+000044         PROCEDURE DIVISION.
+000045         0000-PRINCIPAL.
+000046             ADD WS-COMPRA-1 WS-COMPRA-2 WS-COMPRA-3
+000047                 WS-COMPRA-4 WS-COMPRA-5
+000048                 GIVING WS-TOTAL-COMPRAS
+000049
+000050             IF WS-COMPRA-1 > WS-LIMITE
+000051                ADD 1 TO WS-QTD-ACIMA-LIMITE
+000052             END-IF
+GnuCOBOL 3.3-dev.0      sistema\work\FATJURO Fri Oct 23 2026 19:42:24  Page 0002
+
+LINE    PG/LN  A...B............................................................
+
+000053             IF WS-COMPRA-2 > WS-LIMITE
+000054                ADD 1 TO WS-QTD-ACIMA-LIMITE
+000055             END-IF
+000056             IF WS-COMPRA-3 > WS-LIMITE
+000057                ADD 1 TO WS-QTD-ACIMA-LIMITE
+000058             END-IF
+000059             IF WS-COMPRA-4 > WS-LIMITE
+000060                ADD 1 TO WS-QTD-ACIMA-LIMITE
+000061             END-IF
+000062             IF WS-COMPRA-5 > WS-LIMITE
+000063                ADD 1 TO WS-QTD-ACIMA-LIMITE
+000064             END-IF
+000065
+000066             IF WS-DIAS-ATRASO > ZERO
+000067                COMPUTE WS-MULTA ROUNDED =
+000068                        WS-SALDO-ANTERIOR * WS-TAXA-MULTA
+000069                COMPUTE WS-JUROS ROUNDED =
+000070                        WS-SALDO-ANTERIOR * WS-TAXA-JUROS-MES
+000071                        * WS-DIAS-ATRASO / 30
+000072                END-COMPUTE
+000073             END-IF
+000074
+000075             COMPUTE WS-TOTAL-FATURA =
+000076                     WS-TOTAL-COMPRAS + WS-SALDO-ANTERIOR
+000077                     + WS-MULTA + WS-JUROS
+000078                ON SIZE ERROR
+000079                   DISPLAY 'FATJUROS - ESTOURO NO TOTAL DA FATURA'
+000080                   MOVE 16 TO RETURN-CODE
+000081                   GOBACK
+000082             END-COMPUTE
+000083
+000084             DISPLAY '=== FATURA DO CLIENTE (DADOS FICTICIOS) ==='
+000085             MOVE WS-TOTAL-COMPRAS  TO WS-VALOR-EDITADO
+000086             DISPLAY 'TOTAL DE COMPRAS ......: ' WS-VALOR-EDITADO
+000087             MOVE WS-SALDO-ANTERIOR TO WS-VALOR-EDITADO
+000088             DISPLAY 'SALDO ANTERIOR ........: ' WS-VALOR-EDITADO
+000089             MOVE WS-MULTA          TO WS-VALOR-EDITADO
+000090             DISPLAY 'MULTA (2%) ............: ' WS-VALOR-EDITADO
+000091             MOVE WS-JUROS          TO WS-VALOR-EDITADO
+000092             DISPLAY 'JUROS PRO RATA ........: ' WS-VALOR-EDITADO
+000093             MOVE WS-TOTAL-FATURA   TO WS-VALOR-EDITADO
+000094             DISPLAY 'TOTAL DA FATURA .......: ' WS-VALOR-EDITADO
+000095             DISPLAY 'COMPRAS ACIMA DO LIMITE: ' WS-QTD-ACIMA-LIMITE
+000096
+000097             GOBACK.
+
+
+0 warnings in compilation group
+0 errors in compilation group
