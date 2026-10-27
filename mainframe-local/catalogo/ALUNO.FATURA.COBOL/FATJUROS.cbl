@@ -18,13 +18,13 @@
        WORKING-STORAGE SECTION.
       *--- ENTRADAS (VALORES FIXOS NESTA AULA; ARQUIVOS NA AULA 7) ----*
        01  WS-COMPRAS.
-           05  WS-COMPRA-1            PIC 9(07)V99 VALUE 152.30.
-           05  WS-COMPRA-2            PIC 9(07)V99 VALUE 89.90.
-           05  WS-COMPRA-3            PIC 9(07)V99 VALUE 1200.00.
-           05  WS-COMPRA-4            PIC 9(07)V99 VALUE 45.50.
+           05  WS-COMPRA-1            PIC 9(07)V99 VALUE 13.13.
+           05  WS-COMPRA-2            PIC 9(07)V99 VALUE 80.90.
+           05  WS-COMPRA-3            PIC 9(07)V99 VALUE 1500.00.
+           05  WS-COMPRA-4            PIC 9(07)V99 VALUE 245.50.
            05  WS-COMPRA-5            PIC 9(07)V99 VALUE 310.00.
-       01  WS-SALDO-ANTERIOR          PIC 9(07)V99 VALUE 500.00.
-       01  WS-DIAS-ATRASO             PIC 9(03)    VALUE 10.
+       01  WS-SALDO-ANTERIOR          PIC 9(07)V99 VALUE 800.00.
+       01  WS-DIAS-ATRASO             PIC 9(03)    VALUE 13.
        01  WS-LIMITE                  PIC 9(07)V99 VALUE 1000.00.
 
       *--- CONSTANTES DE NEGOCIO --------------------------------------*
