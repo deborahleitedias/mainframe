@@ -32,6 +32,11 @@ if (Test-Path $cfgFile) {
     if ($l -match '^\s*([A-Z]+)\s*=\s*(.*?)\s*$') { $CFG[$matches[1]] = $matches[2] }
   }
 }
+# macOS e Linux (PowerShell 7): sem .exe, e o modulo dinamico tem a extensao do sistema
+if ((Test-Path variable:IsWindows) -and -not $IsWindows -and -not $CFG.RUNNER) {
+  if ($CFG.EXE -eq '.exe') { $CFG.EXE = '' }
+  if ($CFG.MOD -eq '.dll') { if ($IsMacOS) { $CFG.MOD = '.dylib' } else { $CFG.MOD = '.so' } }
+}
 $USER = $CFG.USUARIO.ToUpper()
 if ($USER.Length -gt 7) { $USER = $USER.Substring(0, 7) }
 
@@ -563,6 +568,50 @@ function Pgm-IEBGENER($tab, $stepName) {
   return 0
 }
 
+function Sort-Interno($inFiles, [string]$outPath, [int]$lrecl, $ctl, $pr) {
+  $txt = (($ctl | ForEach-Object { $_.Trim() }) -join ' ').ToUpper()
+  if ($txt -match '\b(INCLUDE|OMIT|INREC|OUTREC|OUTFIL|SUM|MERGE)\b') { [void]$pr.AppendLine('SIM023E INSTRUCAO NAO SUPORTADA SEM O GCSORT: ' + $Matches[1]); return $false }
+  $chaves = @(); $copia = $false
+  if ($txt -match 'SORT\s+FIELDS=COPY' -or $txt -match 'OPTION\s+COPY') { $copia = $true }
+  elseif ($txt -match 'SORT\s+FIELDS=\(([^)]*)\)') {
+    $p = $Matches[1].Split(',') | ForEach-Object { $_.Trim() }
+    if ($p.Count % 4 -ne 0) { [void]$pr.AppendLine('ICE007A SYNTAX ERROR EM SORT FIELDS'); return $false }
+    for ($k = 0; $k -lt $p.Count; $k += 4) {
+      $tp = $p[$k + 2]; $dr = $p[$k + 3]
+      if ($tp -notin 'CH', 'ZD' -or $dr -notin 'A', 'D') { [void]$pr.AppendLine('SIM023E FORMATO NAO SUPORTADO SEM O GCSORT: ' + $tp + ',' + $dr); return $false }
+      $chaves += @{ POS = [int]$p[$k] - 1; LEN = [int]$p[$k + 1]; TIPO = $tp; DESC = ($dr -eq 'D') }
+    }
+  } else { [void]$pr.AppendLine('ICE005A INSTRUCAO SORT NAO ENCONTRADA'); return $false }
+  $regs = New-Object Collections.Generic.List[byte[]]
+  foreach ($f in $inFiles) {
+    if (-not $f -or -not (Test-Path -LiteralPath $f)) { continue }
+    $b = [IO.File]::ReadAllBytes($f)
+    for ($x = 0; $x + $lrecl -le $b.Length; $x += $lrecl) { $r1 = New-Object byte[] $lrecl; [Array]::Copy($b, $x, $r1, 0, $lrecl); $regs.Add($r1) }
+  }
+  $saida = @()
+  if ($copia -or $chaves.Count -eq 0) { $saida = $regs }
+  else {
+    $props = @()
+    foreach ($c in $chaves) {
+      $cc = $c
+      if ($cc.TIPO -eq 'ZD') {
+        $props += @{ Expression = [scriptblock]::Create('$d = ($LAT.GetString($_.R, ' + $cc.POS + ', ' + $cc.LEN + ') -replace "[^0-9]", ""); if ($d -eq "") { [decimal]0 } else { [decimal]$d }'); Descending = $cc.DESC }
+      } else {
+        $props += @{ Expression = [scriptblock]::Create('[BitConverter]::ToString($_.R, ' + $cc.POS + ', ' + $cc.LEN + ').Replace("-", "")'); Descending = $cc.DESC }
+      }
+    }
+    $props += @{ Expression = { $_.N }; Descending = $false }
+    $n = 0
+    $objs = foreach ($r1 in $regs) { [pscustomobject]@{ R = $r1; N = $n }; $n++ }
+    $saida = @($objs | Sort-Object -Property $props -Culture 'en-US' -CaseSensitive | ForEach-Object { $_.R })
+  }
+  $ms = New-Object IO.MemoryStream
+  foreach ($r1 in $saida) { $ms.Write($r1, 0, $r1.Length) }
+  [IO.File]::WriteAllBytes($outPath, $ms.ToArray())
+  [void]$pr.AppendLine(('ICE054I 0 RECORDS - IN: {0}' -f $regs.Count))
+  return $true
+}
+
 function Pgm-SORT($tab, $stepName) {
   $pr = New-Object Text.StringBuilder
   foreach ($n in @('SORTIN', 'SORTOUT', 'SYSIN')) { if (-not $tab.Contains($n)) { [void]$pr.AppendLine("ICE057A  SORTIN, SORTOUT OU SYSIN AUSENTE: $n"); AddOut $stepName 'SYSOUT' $pr.ToString(); return 16 } }
@@ -577,11 +626,19 @@ function Pgm-SORT($tab, $stepName) {
   $lines += (' GIVE {0} RECORD F,{1} ORG SQ' -f (Rel $o.PATH), $o.LRECL)
   $lines += $ctl
   [IO.File]::WriteAllLines($take, [string[]]$lines, $LAT)
-  [void]$pr.AppendLine('SIM020I SORT EXECUTADO PELO GCSORT (COMPATIVEL COM DFSORT)')
-  foreach ($c in $ctl) { [void]$pr.AppendLine(' ' + $c.Trim()) }
-  $r = RunProc $CFG.GCSORT ('TAKE "{0}"' -f (Rel $take)) $null
-  [void]$pr.AppendLine($r.OUT); if ($r.ERR) { [void]$pr.AppendLine($r.ERR) }
-  $ok = ($r.OUT -match 'Sort OK|Merge OK|Copy OK') -and $r.RC -eq 0
+  $temGcsort = $true
+  if (-not $CFG.RUNNER) { $temGcsort = [bool](Get-Command $CFG.GCSORT -ErrorAction SilentlyContinue) }
+  if ($temGcsort) {
+    [void]$pr.AppendLine('SIM020I SORT EXECUTADO PELO GCSORT (COMPATIVEL COM DFSORT)')
+    foreach ($c in $ctl) { [void]$pr.AppendLine(' ' + $c.Trim()) }
+    $r = RunProc $CFG.GCSORT ('TAKE "{0}"' -f (Rel $take)) $null
+    [void]$pr.AppendLine($r.OUT); if ($r.ERR) { [void]$pr.AppendLine($r.ERR) }
+    $ok = ($r.OUT -match 'Sort OK|Merge OK|Copy OK') -and $r.RC -eq 0
+  } else {
+    [void]$pr.AppendLine('SIM022I GCSORT NAO ENCONTRADO: SORT EXECUTADO PELO SIMULADOR (SORT FIELDS COM CH E ZD)')
+    foreach ($c in $ctl) { [void]$pr.AppendLine(' ' + $c.Trim()) }
+    $ok = Sort-Interno $inFiles $o.PATH $i.LRECL $ctl $pr
+  }
   if ($ok) {
     $n = 0; if (Test-Path -LiteralPath $o.PATH) { $n = [int]((Get-Item -LiteralPath $o.PATH).Length / $o.LRECL) }
     [void]$pr.AppendLine(('ICE054I 0 RECORDS - OUT: {0}' -f $n))
@@ -663,6 +720,38 @@ function Pgm-IDCAMS($tab, $stepName) {
         [void]$pr.AppendLine(('0IDC0005I NUMBER OF RECORDS PROCESSED WAS {0}' -f $recs.Count)); $cc = 0
       }
     }
+    elseif ($cmd -match '^PRINT\s+(.*)$') {
+      $o = $matches[1]; $inA = $null; $nome = ''
+      if ($o -match '(INFILE|IFILE)\s*\(\s*(\w+)\s*\)') { if ($tab.Contains($matches[2])) { $inA = $tab[$matches[2]]; $nome = $inA.DSN } }
+      if ($o -match '(INDATASET|IDS)\s*\(\s*([^)\s]+)\s*\)') {
+        $rr = ResolveDsn $matches[2]
+        if (-not $rr.ERROR -and (DsExists $rr.DSN)) { $at = GetAttr $rr.DSN; $inA = @{ PATH = DsFile $rr.DSN; LRECL = $at.LRECL; ISTEXT = $false }; $nome = $rr.DSN }
+      }
+      $max = [int]::MaxValue; if ($o -match 'COUNT\s*\(\s*(\d+)\s*\)') { $max = [int]$matches[1] }
+      $modo = 'DUMP'; if ($o -match '\bCHAR(ACTER)?\b') { $modo = 'CHAR' } elseif ($o -match '\bHEX\b') { $modo = 'HEX' }
+      if (-not $inA) { [void]$pr.AppendLine('0IDC3300I ERROR OPENING DATA SET'); [void]$pr.AppendLine(' IDC3321I ** OPEN DID NOT COMPLETE FOR THE INPUT DATA SET'); $cc = 12 }
+      else {
+        $recs = ReadRecords $inA.PATH $inA.LRECL $inA.ISTEXT
+        [void]$pr.AppendLine(('0LISTING OF DATA SET -{0}' -f $nome))
+        $k = 0
+        foreach ($r in $recs) {
+          $k++; if ($k -gt $max) { break }
+          [void]$pr.AppendLine(('0RECORD SEQUENCE NUMBER - {0}' -f $k))
+          if ($modo -eq 'CHAR') { [void]$pr.AppendLine(' ' + $LAT.GetString($r)); continue }
+          for ($off = 0; $off -lt $r.Length; $off += 32) {
+            $n = [Math]::Min(32, $r.Length - $off)
+            $hx = ''
+            for ($b = 0; $b -lt $n; $b++) { if ($b -gt 0 -and $b % 4 -eq 0) { $hx += ' ' }; $hx += $r[$off + $b].ToString('X2') }
+            $ch = ''
+            for ($b = 0; $b -lt $n; $b++) { $c = $r[$off + $b]; if ($c -ge 32 -and $c -lt 127) { $ch += [char]$c } else { $ch += '.' } }
+            if ($modo -eq 'HEX') { [void]$pr.AppendLine((' {0}  {1}' -f $off.ToString('X6'), $hx)) }
+            else { [void]$pr.AppendLine((' {0}  {1}  *{2}*' -f $off.ToString('X6'), $hx.PadRight(71), $ch)) }
+          }
+        }
+        $tot = [Math]::Min($recs.Count, $max)
+        [void]$pr.AppendLine(('0IDC0005I NUMBER OF RECORDS PROCESSED WAS {0}' -f $tot)); $cc = 0
+      }
+    }
     elseif ($cmd -match '^(LISTCAT|LISTC)\b(.*)$') {
       $o = $matches[2]; $pat = ''
       if ($o -match '(ENTRIES|ENT|LEVEL|LVL)\s*\(\s*([^)\s]+)\s*\)') { $pat = $matches[2] }
@@ -708,7 +797,7 @@ function Pgm-User([string]$pgm, $tab, $stepName, $job) {
   $r = RunProc $exe '' $envs
   $outDd = 'SYSOUT'
   AddOut $stepName $outDd $r.OUT
-  if ($r.ERR -match 'libcob: (error|erro)|attempt to reference|signal SIG') {
+  if ($r.ERR -match 'libcob: (\S+: )?(error|erro)|attempt to reference|signal SIG') {
     $txt = $r.ERR
     if ($tab.Contains('CEEDUMP')) { AddOut $stepName 'CEEDUMP' $txt } else { AddOut $stepName 'SYSOUT-ERRO' $txt }
     if ($txt -match 'not numeric|nao numerico|incompatible|data exception') { return 'S0C7' }
@@ -740,7 +829,7 @@ function Proc-IGYWCL($step, $tab, $job) {
   $inc = ''
   if ($lib) { $inc = '-I "{0}"' -f (Rel $lib.PATH); foreach ($c in $lib.CONCAT) { $inc += ' -I "{0}"' -f (Rel $c) } }
   $xflag = ''; if ($main) { $xflag = '-x' }
-  $a = ('-c {0} -std=ibm {1} -t "{2}" -o "{3}" "{4}"' -f $xflag, $inc, (Rel $lst), (Rel $obj), (Rel $tmpSrc))
+  $a = ('-c {0} -std=ibm -fec=EC-DATA-INCOMPATIBLE {1} -t "{2}" -o "{3}" "{4}"' -f $xflag, $inc, (Rel $lst), (Rel $obj), (Rel $tmpSrc))
   $r = RunProc $CFG.COBC $a $null
   $listing = ''; if (Test-Path -LiteralPath $lst) { $listing = [IO.File]::ReadAllText($lst, $LAT) }
   $msgs = ($r.OUT + $r.ERR).Trim()

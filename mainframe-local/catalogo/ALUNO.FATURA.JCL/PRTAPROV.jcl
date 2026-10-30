@@ -1,0 +1,12 @@
+//PRTAPROV JOB ,'FATURA NOTURNA',NOTIFY=&SYSUID,
+//             CLASS=A,MSGCLASS=X
+//*--------------------------------------------------------------------
+//* AULA 7 - MOSTRA OS 3 PRIMEIROS REGISTROS DO TRANS.APROV EM
+//* HEXADECIMAL (IDCAMS PRINT DUMP). O CAMPO TI-VALOR (COMP-3) FICA
+//* NAS POSICOES 31 A 36 (DESLOCAMENTO X'1E' A X'23').
+//*--------------------------------------------------------------------
+//PRINT    EXEC PGM=IDCAMS
+//SYSPRINT DD SYSOUT=*
+//SYSIN    DD *,SYMBOLS=JCLONLY
+  PRINT INDATASET(&SYSUID..FATURA.TRANS.APROV) DUMP COUNT(3)
+/*

@@ -1,0 +1,146 @@
+GnuCOBOL 3.3-dev.0      sistema\work\FATCLAS Fri Oct 30 2026 13:10:20  Page 0001
+
+LINE    PG/LN  A...B............................................................
+
+000001
+000002        *================================================================*
+000003        * PROGRAMA : FATCLASS (ESQUELETO PARA A TURMA)                   *
+000004        * AULA     : 6 - COBOL II, DECISAO E REPETICAO                   *
+000005        * OBJETIVO : CLASSIFICAR TRANSACOES EM APROVADA, NEGADA OU       *
+000006        *            SUSPEITA E VALIDAR O NUMERO DO CARTAO (LUHN).       *
+000007        * O QUE VOCE ESCREVE:                                            *
+000008        *   1. OS NIVEIS 88 MARCADOS NA TABELA DE TESTE;                 *
+000009        *   2. O EVALUATE TRUE DO PARAGRAFO 2100-CLASSIFICAR-TRANSACAO.  *
+000010        * O PARAGRAFO 9100-VALIDAR-LUHN JA ESTA PRONTO: LEIA E COMPARE   *
+000011        * COM O PSEUDOCODIGO DE LUHN DA AULA 2.                          *
+000012        * REGRAS   : CARTAO INVALIDO = NUMERO REPROVADO NO LUHN          *
+000013        *            NEGADA   = STATUS 'N' DA AUTORIZACAO                *
+000014        *            SUSPEITA = APROVADA, FORA DO PAIS E VALOR ACIMA     *
+000015        *                       DE 5.000,00                              *
+000016        *            APROVADA = DEMAIS CASOS                             *
+000017        *================================================================*
+000018         IDENTIFICATION DIVISION.
+000019         PROGRAM-ID. FATCLASS.
+000020
+000021         DATA DIVISION.
+000022         WORKING-STORAGE SECTION.
+000023         01  WS-LIMITE-SUSPEITA         PIC 9(09)V99 VALUE 5000.00.
+000024
+000025        *--- MASSA DE TESTE ---------------------------------------------*
+000026         01  WS-MASSA-TESTE.
+000027             05  FILLER PIC X(31) VALUE
+000028                 '990000073702838300000015000BRAA'.
+000029             05  FILLER PIC X(31) VALUE
+000030                 '990000073702838300000750000USAA'.
+000031             05  FILLER PIC X(31) VALUE
+000032                 '990000079819331600000020000BRAN'.
+000033             05  FILLER PIC X(31) VALUE
+000034                 '990000079819331700000020000BRAA'.
+000035             05  FILLER PIC X(31) VALUE
+000036                 '990000079819331600000450000ARGA'.
+000037             05  FILLER PIC X(31) VALUE
+000038                 '990000073702838300000500000USAA'.
+000039
+000040         01  WS-TABELA-TESTE REDEFINES WS-MASSA-TESTE.
+000041             05  WS-TRANS-TESTE OCCURS 6 TIMES.
+000042                 10  WS-T-CARTAO        PIC X(16).
+000043                 10  WS-T-VALOR         PIC 9(09)V99.
+000044                 10  WS-T-PAIS          PIC X(03).
+000045                     88  WS-T-NACIONAL VALUE 'BRA'.
+000046                 10  WS-T-STATUS        PIC X(01).
+000047                     88  WS-T-APROVADA VALUE 'A'.
+000048                     88  WS-T-NEGADA   VALUE 'N'.
+000049
+000050         01  WS-IND                     PIC 9(02).
+000051         01  WS-CLASSIFICACAO           PIC X(20).
+000052
+GnuCOBOL 3.3-dev.0      sistema\work\FATCLAS Fri Oct 30 2026 13:10:20  Page 0002
+
+LINE    PG/LN  A...B............................................................
+
+000053        *--- AREAS DO ALGORITMO DE LUHN ---------------------------------*
+000054         01  WS-LUHN-CARTAO             PIC X(16).
+000055         01  WS-LUHN-DIGITOS REDEFINES WS-LUHN-CARTAO.
+000056             05  WS-LUHN-DIGITO         PIC 9(01) OCCURS 16 TIMES.
+000057         01  WS-LUHN-POS                PIC 9(02).
+000058         01  WS-LUHN-PARCELA            PIC 9(02).
+000059         01  WS-LUHN-SOMA               PIC 9(03).
+000060         01  WS-LUHN-DOBRAR             PIC X(01).
+000061             88  WS-LUHN-DOBRA          VALUE 'S'.
+000062             88  WS-LUHN-NAO-DOBRA      VALUE 'N'.
+000063         01  WS-LUHN-RESULTADO          PIC X(01).
+000064             88  WS-LUHN-VALIDO         VALUE 'S'.
+000065             88  WS-LUHN-INVALIDO       VALUE 'N'.
+000066
+000067         PROCEDURE DIVISION.
+000068         0000-PRINCIPAL.
+000069             PERFORM 2100-CLASSIFICAR-TRANSACAO
+000070                VARYING WS-IND FROM 1 BY 1
+000071                UNTIL WS-IND > 6
+000072             GOBACK.
+000073
+000074         2100-CLASSIFICAR-TRANSACAO.
+000075             MOVE SPACES TO WS-CLASSIFICACAO
+000076             MOVE WS-T-CARTAO(WS-IND) TO WS-LUHN-CARTAO
+000077             PERFORM 9100-VALIDAR-LUHN
+000078
+000079             EVALUATE TRUE
+000080                 WHEN WS-LUHN-INVALIDO
+000081                     MOVE 'CARTAO INVALIDO'
+000082                       TO WS-CLASSIFICACAO
+000083
+000084                 WHEN WS-T-NEGADA(WS-IND)
+000085                     MOVE 'NEGADA'
+000086                       TO WS-CLASSIFICACAO
+000087
+000088                 WHEN WS-T-APROVADA(WS-IND)
+000089                  AND NOT WS-T-NACIONAL(WS-IND)
+000090                  AND WS-T-VALOR(WS-IND) > WS-LIMITE-SUSPEITA
+000091                     MOVE 'SUSPEITA'
+000092                       TO WS-CLASSIFICACAO
+000093
+000094                 WHEN OTHER
+000095                     MOVE 'APROVADA'
+000096                       TO WS-CLASSIFICACAO
+000097             END-EVALUATE
+000098
+000099             DISPLAY 'TRANSACAO ' WS-IND ': ' WS-CLASSIFICACAO
+000100             .
+000101
+000102        *----------------------------------------------------------------*
+000103        * ALGORITMO DE LUHN
+000104        *----------------------------------------------------------------*
+GnuCOBOL 3.3-dev.0      sistema\work\FATCLAS Fri Oct 30 2026 13:10:20  Page 0003
+
+LINE    PG/LN  A...B............................................................
+
+000105         9100-VALIDAR-LUHN.
+000106             SET WS-LUHN-INVALIDO TO TRUE
+000107             IF WS-LUHN-CARTAO IS NUMERIC
+000108                MOVE ZERO TO WS-LUHN-SOMA
+000109                SET WS-LUHN-NAO-DOBRA TO TRUE
+000110                PERFORM VARYING WS-LUHN-POS FROM 16 BY -1
+000111                        UNTIL WS-LUHN-POS < 1
+000112                   MOVE WS-LUHN-DIGITO(WS-LUHN-POS)
+000113                     TO WS-LUHN-PARCELA
+000114                   IF WS-LUHN-DOBRA
+000115                      COMPUTE WS-LUHN-PARCELA =
+000116                         WS-LUHN-PARCELA * 2
+000117                      IF WS-LUHN-PARCELA > 9
+000118                         SUBTRACT 9 FROM WS-LUHN-PARCELA
+000119                      END-IF
+000120                      SET WS-LUHN-NAO-DOBRA TO TRUE
+000121                   ELSE
+000122                      SET WS-LUHN-DOBRA TO TRUE
+000123                   END-IF
+000124                   ADD WS-LUHN-PARCELA TO WS-LUHN-SOMA
+000125                END-PERFORM
+000126                IF FUNCTION MOD(WS-LUHN-SOMA, 10) = ZERO
+000127                   SET WS-LUHN-VALIDO TO TRUE
+000128                END-IF
+000129             END-IF
+000130             .
+
+
+0 warnings in compilation group
+0 errors in compilation group

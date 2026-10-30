@@ -1,4 +1,4 @@
-GnuCOBOL 3.3-dev.0      sistema\work\FATJURO Mon Oct 26 2026 18:10:26  Page 0001
+GnuCOBOL 3.3-dev.0      sistema\work\FATJURO Fri Oct 30 2026 13:03:07  Page 0001
 
 LINE    PG/LN  A...B............................................................
 
@@ -54,7 +54,7 @@ LINE    PG/LN  A...B............................................................
 000050             IF WS-COMPRA-1 > WS-LIMITE
 000051                ADD 1 TO WS-QTD-ACIMA-LIMITE
 000052             END-IF
-GnuCOBOL 3.3-dev.0      sistema\work\FATJURO Mon Oct 26 2026 18:10:26  Page 0002
+GnuCOBOL 3.3-dev.0      sistema\work\FATJURO Fri Oct 30 2026 13:03:07  Page 0002
 
 LINE    PG/LN  A...B............................................................
 
