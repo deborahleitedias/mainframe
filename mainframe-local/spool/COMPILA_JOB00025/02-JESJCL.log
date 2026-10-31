@@ -1,0 +1,19 @@
+        1 //COMPILA  JOB ,'FATURA NOTURNA',NOTIFY=&SYSUID,
+          //             CLASS=A,MSGCLASS=X
+          //*--------------------------------------------------------------------
+          //* AULAS 5 A 9 - COMPILA E LIGA UM PROGRAMA COBOL BATCH (SEM DB2)
+          //* TROCAR O VALOR DE PGM NO SET ABAIXO PELO NOME DO MEMBRO.
+          //* IGYWCL E A PROC PADRAO DO ENTERPRISE COBOL (COMPILE + LINK-EDIT).
+          //* CONFERIDO NA PLATAFORMA IBM Z XPLORE (ENTERPRISE COBOL 6.5).
+          //* IEF677I/IEF686I VEM DA PROC E NAO SAO ERRO. RC 4 COM IGYCB7310-W
+          //* (PERFORM DO 9900, QUE TERMINA COM STOP RUN) E NORMAL.
+          //* MATERIAL 12: PARA ACHAR NO FONTE O OFFSET DE UM ABEND, RECOMPILE
+          //*   //CL       EXEC IGYWCL,PARM.COBOL='LIST'
+          //* E PROCURE O OFFSET NA LISTAGEM (CL:SYSPRINT DO STEP COBOL).
+          //*--------------------------------------------------------------------
+        2 //         SET PGM=FATRELAT
+          //*
+        3 //CL       EXEC IGYWCL
+        4 //COBOL.SYSIN  DD DSN=&SYSUID..FATURA.COBOL(&PGM),DISP=SHR
+        5 //COBOL.SYSLIB DD DSN=&SYSUID..FATURA.COPY,DISP=SHR
+        6 //LKED.SYSLMOD DD DSN=&SYSUID..FATURA.LOAD(&PGM),DISP=SHR

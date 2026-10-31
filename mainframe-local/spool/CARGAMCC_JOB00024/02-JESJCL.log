@@ -1,0 +1,12 @@
+        1 //CARGAMCC JOB ,'TABELA MCC',NOTIFY=&SYSUID,
+          //             CLASS=A,MSGCLASS=X
+          //*--------------------------------------------------------------------
+          //* AULA 8: CARREGA A TABELA DE CATEGORIAS (MCC) USADA PELO FATRELAT.
+          //* RODAR UMA VEZ. A TABELA PRECISA FICAR EM ORDEM CRESCENTE DE MCC.
+          //*--------------------------------------------------------------------
+        2 //STEP010  EXEC PGM=IEBGENER
+        3 //SYSPRINT DD SYSOUT=*
+        4 //SYSIN    DD DUMMY
+        5 //SYSUT2   DD DSN=&SYSUID..FATURA.MCC.TABELA,DISP=OLD
+        6 //SYSUT1   DD *
+          /*

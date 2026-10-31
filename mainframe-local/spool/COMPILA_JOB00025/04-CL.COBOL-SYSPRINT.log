@@ -1,0 +1,371 @@
+SIM031I COMPILACAO COM GNUCOBOL (-std=ibm), PROGRAMA FATRELAT (PRINCIPAL)
+
+
+
+GnuCOBOL 3.3-dev.0      sistema\work\FATRELA Fri Oct 30 2026 21:42:54  Page 0001
+
+LINE    PG/LN  A...B............................................................
+
+000001        *================================================================*
+000002        * PROGRAMA : FATRELAT                                            *
+000003        * AULA     : 8 - COBOL IV, TABELAS INTERNAS E RELATORIOS         *
+000004        * OBJETIVO : EMITIR O RELATORIO DE FATURAS: DETALHE POR          *
+000005        *            TRANSACAO, TOTAL POR CARTAO (QUEBRA DE CONTROLE) E  *
+000006        *            TOTAL GERAL POR CATEGORIA (MCC).                    *
+000007        *            O NUMERO DO CARTAO E SEMPRE EXIBIDO MASCARADO.      *
+000008        * ENTRADAS : DD APROVIN  - CPTRANI, FB 80, ORDENADO POR CARTAO   *
+000009        *            DD MCCTAB   - TABELA MCC, FB 80, ORDENADA POR MCC   *
+000010        * SAIDA    : DD RELATOUT - RELATORIO, FBA 133 (LINHA DE 132 +    *
+000011        *            CARACTERE DE CONTROLE GERADO PELO ADVANCING)        *
+000012        *================================================================*
+000013         IDENTIFICATION DIVISION.
+000014         PROGRAM-ID. FATRELAT.
+000015
+000016         ENVIRONMENT DIVISION.
+000017         INPUT-OUTPUT SECTION.
+000018         FILE-CONTROL.
+000019             SELECT TRANS-APROVADA ASSIGN TO APROVIN
+000020                    FILE STATUS IS WS-FS-APROVADA.
+000021             SELECT TABELA-MCC     ASSIGN TO MCCTAB
+000022                    FILE STATUS IS WS-FS-MCC.
+000023             SELECT RELATORIO      ASSIGN TO RELATOUT
+000024                    FILE STATUS IS WS-FS-RELATORIO.
+000025
+000026         DATA DIVISION.
+000027         FILE SECTION.
+000028         FD  TRANS-APROVADA
+000029             RECORDING MODE IS F.
+000030             COPY CPTRANI.
+000001C       *================================================================*
+000002C       * CPTRANI  - TRANSACAO INTERNA (APOS VALIDACAO)                  *
+000003C       * LRECL 80, RECFM FB. VALOR EM COMP-3 (PACKED DECIMAL).          *
+000004C       * ESTE ARQUIVO E BINARIO: NAO TRANSFERIR COMO TEXTO.             *
+000005C       *================================================================*
+000006C        01  REG-TRANS-INTERNA.
+000007C            05  TI-NUM-CARTAO          PIC X(16).
+000008C            05  TI-DATA-TRANSACAO      PIC 9(08).
+000009C            05  TI-HORA-TRANSACAO      PIC 9(06).
+000010C            05  TI-VALOR               PIC S9(09)V99 COMP-3.
+000011C            05  TI-MCC                 PIC 9(04).
+000012C            05  TI-PAIS                PIC X(03).
+000013C            05  TI-COD-AUTORIZACAO     PIC X(06).
+000014C            05  TI-CLASSIFICACAO       PIC X(01).
+000015C                88  TI-NORMAL                    VALUE 'N'.
+000016C                88  TI-SUSPEITA                  VALUE 'S'.
+000017C            05  TI-ESTABELECIMENTO     PIC X(20).
+000018C            05  FILLER                 PIC X(10).
+000031         FD  TABELA-MCC
+000032             RECORDING MODE IS F.
+000033         01  REG-MCC.
+000034             05  MC-CODIGO              PIC 9(04).
+GnuCOBOL 3.3-dev.0      sistema\work\FATRELA Fri Oct 30 2026 21:42:54  Page 0002
+
+LINE    PG/LN  A...B............................................................
+
+000035             05  MC-DESCRICAO           PIC X(30).
+000036             05  FILLER                 PIC X(46).
+000037         FD  RELATORIO
+000038             RECORDING MODE IS F.
+000039         01  REG-RELATORIO              PIC X(132).
+000040
+000041         WORKING-STORAGE SECTION.
+000042         01  WS-FS-APROVADA             PIC X(02).
+000043             88  WS-FS-APR-OK                     VALUE '00'.
+000044             88  WS-FS-APR-FIM                    VALUE '10'.
+000045         01  WS-FS-MCC                  PIC X(02).
+000046             88  WS-FS-MCC-OK                     VALUE '00'.
+000047             88  WS-FS-MCC-FIM                    VALUE '10'.
+000048         01  WS-FS-RELATORIO            PIC X(02).
+000049             88  WS-FS-REL-OK                     VALUE '00'.
+000050
+000051        *--- TABELA DE MCC EM MEMORIA (CARREGADA DO ARQUIVO MCCTAB) -----*
+000052        *    AS POSICOES NAO USADAS FICAM COM CODIGO 9999 PARA QUE A
+000053        *    TABELA CONTINUE EM ORDEM CRESCENTE (EXIGENCIA DO SEARCH ALL)
+000054         01  WS-MAX-MCC                 PIC 9(03) VALUE 100.
+000055         01  WS-QTD-MCC                 PIC 9(03) VALUE ZERO.
+000056         01  WS-TABELA-MCC.
+000057             05  WS-MCC-ITEM OCCURS 100 TIMES
+000058                             ASCENDING KEY IS WS-MCC-CODIGO
+000059                             INDEXED BY IX-MCC.
+000060                 10  WS-MCC-CODIGO      PIC 9(04).
+000061                 10  WS-MCC-DESCRICAO   PIC X(30).
+000062                 10  WS-MCC-TOTAL       PIC S9(11)V99 COMP-3.
+000063                 10  WS-MCC-QTD         PIC 9(07).
+000064
+000065        *--- CONTROLE DA QUEBRA -----------------------------------------*
+000066         01  WS-CARTAO-ANTERIOR         PIC X(16).
+000067         01  WS-TOTAL-CARTAO            PIC S9(11)V99 COMP-3.
+000068         01  WS-TOTAL-GERAL             PIC S9(13)V99 COMP-3 VALUE ZERO.
+000069         01  WS-QTD-CARTOES             PIC 9(07) VALUE ZERO.
+000070         01  WS-DESC-CATEGORIA          PIC X(30).
+000071
+000072        *--- PAGINACAO --------------------------------------------------*
+000073         01  WS-LINHAS-POR-PAGINA       PIC 9(03) VALUE 50.
+000074         01  WS-CONTA-LINHAS            PIC 9(03) VALUE 99.
+000075         01  WS-PAGINA                  PIC 9(04) VALUE ZERO.
+000076
+000077        *--- MASCARAMENTO -----------------------------------------------*
+000078         01  WS-CARTAO-ABERTO           PIC X(16).
+000079         01  WS-CARTAO-MASC             PIC X(16).
+000080
+000081        *--- LINHAS DO RELATORIO ----------------------------------------*
+000082         01  WS-CAB-1.
+000083             05  FILLER                 PIC X(40) VALUE
+000084                 'FATURA NOTURNA - RELATORIO DE FATURAS'.
+000085             05  FILLER                 PIC X(20) VALUE
+000086                 '(DADOS FICTICIOS)'.
+GnuCOBOL 3.3-dev.0      sistema\work\FATRELA Fri Oct 30 2026 21:42:54  Page 0003
+
+LINE    PG/LN  A...B............................................................
+
+000087             05  FILLER                 PIC X(60) VALUE SPACES.
+000088             05  FILLER                 PIC X(07) VALUE 'PAGINA '.
+000089             05  CB1-PAGINA             PIC ZZZ9.
+000090             05  FILLER                 PIC X(01) VALUE SPACE.
+000091         01  WS-CAB-2.
+000092             05  FILLER                 PIC X(18) VALUE 'CARTAO'.
+000093             05  FILLER                 PIC X(12) VALUE 'DATA'.
+000094             05  FILLER                 PIC X(06) VALUE 'MCC'.
+000095             05  FILLER                 PIC X(32) VALUE 'CATEGORIA'.
+000096             05  FILLER                 PIC X(22) VALUE 'ESTABELECIMENTO'.
+000097             05  FILLER                 PIC X(06) VALUE 'PAIS'.
+000098             05  FILLER                 PIC X(16) VALUE
+000099                 '           VALOR'.
+000100             05  FILLER                 PIC X(02) VALUE SPACES.
+000101             05  FILLER                 PIC X(18) VALUE 'OBS'.
+000102         01  WS-DETALHE.
+000103             05  DT-CARTAO              PIC X(16).
+000104             05  FILLER                 PIC X(02) VALUE SPACES.
+000105             05  DT-DATA                PIC 9999/99/99.
+000106             05  FILLER                 PIC X(02) VALUE SPACES.
+000107             05  DT-MCC                 PIC 9(04).
+000108             05  FILLER                 PIC X(02) VALUE SPACES.
+000109             05  DT-CATEGORIA           PIC X(30).
+000110             05  FILLER                 PIC X(02) VALUE SPACES.
+000111             05  DT-ESTABELECIMENTO     PIC X(20).
+000112             05  FILLER                 PIC X(02) VALUE SPACES.
+000113             05  DT-PAIS                PIC X(03).
+000114             05  FILLER                 PIC X(03) VALUE SPACES.
+000115             05  DT-VALOR               PIC ZZZ,ZZZ,ZZ9.99.
+000116             05  FILLER                 PIC X(04) VALUE SPACES.
+000117             05  DT-OBS                 PIC X(18).
+000118         01  WS-LINHA-TOTAL-CARTAO.
+000119             05  FILLER                 PIC X(18) VALUE SPACES.
+000120             05  FILLER                 PIC X(20) VALUE
+000121                 'TOTAL DO CARTAO'.
+000122             05  TC-CARTAO              PIC X(16).
+000123             05  FILLER                 PIC X(43) VALUE SPACES.
+000124             05  TC-VALOR               PIC ZZ,ZZZ,ZZZ,ZZ9.99.
+000125         01  WS-LINHA-MCC.
+000126             05  FILLER                 PIC X(04) VALUE SPACES.
+000127             05  LM-MCC                 PIC 9(04).
+000128             05  FILLER                 PIC X(02) VALUE SPACES.
+000129             05  LM-DESCRICAO           PIC X(30).
+000130             05  FILLER                 PIC X(02) VALUE SPACES.
+000131             05  LM-QTD                 PIC Z,ZZZ,ZZ9.
+000132             05  FILLER                 PIC X(04) VALUE SPACES.
+000133             05  LM-VALOR               PIC ZZ,ZZZ,ZZZ,ZZ9.99.
+000134         01  WS-LINHA-GERAL.
+000135             05  FILLER                 PIC X(20) VALUE
+000136                 'TOTAL GERAL'.
+000137             05  FILLER                 PIC X(10) VALUE 'CARTOES: '.
+000138             05  LG-QTD-CARTOES         PIC Z,ZZZ,ZZ9.
+GnuCOBOL 3.3-dev.0      sistema\work\FATRELA Fri Oct 30 2026 21:42:54  Page 0004
+
+LINE    PG/LN  A...B............................................................
+
+000139             05  FILLER                 PIC X(10) VALUE SPACES.
+000140             05  FILLER                 PIC X(08) VALUE 'VALOR: '.
+000141             05  LG-VALOR               PIC ZZZ,ZZZ,ZZZ,ZZ9.99.
+000142
+000143         PROCEDURE DIVISION.
+000144         0000-PRINCIPAL.
+000145             PERFORM 1000-INICIALIZAR
+000146             PERFORM 2000-PROCESSAR-CARTAO UNTIL WS-FS-APR-FIM
+000147             PERFORM 3000-FINALIZAR
+000148             GOBACK.
+000149
+000150         1000-INICIALIZAR.
+000151             OPEN INPUT TABELA-MCC
+000152             IF NOT WS-FS-MCC-OK
+000153                DISPLAY 'FATRELAT - ERRO NO OPEN DE MCCTAB. FS='
+000154                        WS-FS-MCC
+000155                PERFORM 9900-ENCERRAR-COM-ERRO
+000156             END-IF
+000157             INITIALIZE WS-TABELA-MCC
+000158             PERFORM VARYING IX-MCC FROM 1 BY 1
+000159                     UNTIL IX-MCC > WS-MAX-MCC
+000160                MOVE 9999 TO WS-MCC-CODIGO(IX-MCC)
+000161             END-PERFORM
+000162             PERFORM 1100-CARREGAR-MCC UNTIL WS-FS-MCC-FIM
+000163             CLOSE TABELA-MCC
+000164
+000165             OPEN INPUT  TRANS-APROVADA
+000166             IF NOT WS-FS-APR-OK
+000167                DISPLAY 'FATRELAT - ERRO NO OPEN DE APROVIN. FS='
+000168                        WS-FS-APROVADA
+000169                PERFORM 9900-ENCERRAR-COM-ERRO
+000170             END-IF
+000171             OPEN OUTPUT RELATORIO
+000172             IF NOT WS-FS-REL-OK
+000173                DISPLAY 'FATRELAT - ERRO NO OPEN DE RELATOUT. FS='
+000174                        WS-FS-RELATORIO
+000175                PERFORM 9900-ENCERRAR-COM-ERRO
+000176             END-IF
+000177             PERFORM 8000-LER-APROVADA
+000178             .
+000179
+000180         1100-CARREGAR-MCC.
+000181             READ TABELA-MCC
+000182                AT END
+000183                   CONTINUE
+000184                NOT AT END
+000185                   IF WS-QTD-MCC >= WS-MAX-MCC
+000186                      DISPLAY 'FATRELAT - TABELA MCC CHEIA'
+000187                      PERFORM 9900-ENCERRAR-COM-ERRO
+000188                   END-IF
+000189                   ADD 1 TO WS-QTD-MCC
+000190                   MOVE MC-CODIGO    TO WS-MCC-CODIGO(WS-QTD-MCC)
+GnuCOBOL 3.3-dev.0      sistema\work\FATRELA Fri Oct 30 2026 21:42:54  Page 0005
+
+LINE    PG/LN  A...B............................................................
+
+000191                   MOVE MC-DESCRICAO TO WS-MCC-DESCRICAO(WS-QTD-MCC)
+000192             END-READ
+000193             .
+000194
+000195        *----------------------------------------------------------------*
+000196        * QUEBRA DE CONTROLE: UM CICLO DESTE PARAGRAFO = UM CARTAO       *
+000197        *----------------------------------------------------------------*
+000198         2000-PROCESSAR-CARTAO.
+000199             MOVE TI-NUM-CARTAO TO WS-CARTAO-ANTERIOR
+000200             MOVE ZERO          TO WS-TOTAL-CARTAO
+000201             ADD 1              TO WS-QTD-CARTOES
+000202             PERFORM 2100-PROCESSAR-TRANSACAO
+000203                UNTIL WS-FS-APR-FIM
+000204                   OR TI-NUM-CARTAO NOT = WS-CARTAO-ANTERIOR
+000205             PERFORM 2200-IMPRIMIR-TOTAL-CARTAO
+000206             .
+000207
+000208         2100-PROCESSAR-TRANSACAO.
+000209             SEARCH ALL WS-MCC-ITEM
+000210                AT END
+000211                   MOVE 'CATEGORIA NAO CADASTRADA' TO WS-DESC-CATEGORIA
+000212                WHEN WS-MCC-CODIGO(IX-MCC) = TI-MCC
+000213                   MOVE WS-MCC-DESCRICAO(IX-MCC)   TO WS-DESC-CATEGORIA
+000214                   ADD TI-VALOR TO WS-MCC-TOTAL(IX-MCC)
+000215                   ADD 1        TO WS-MCC-QTD(IX-MCC)
+000216             END-SEARCH
+000217
+000218             MOVE TI-NUM-CARTAO      TO WS-CARTAO-ABERTO
+000219             PERFORM 9800-MASCARAR-CARTAO
+000220             MOVE WS-CARTAO-MASC     TO DT-CARTAO
+000221             MOVE TI-DATA-TRANSACAO  TO DT-DATA
+000222             MOVE TI-MCC             TO DT-MCC
+000223             MOVE WS-DESC-CATEGORIA  TO DT-CATEGORIA
+000224             MOVE TI-ESTABELECIMENTO TO DT-ESTABELECIMENTO
+000225             MOVE TI-PAIS            TO DT-PAIS
+000226             MOVE TI-VALOR           TO DT-VALOR
+000227             IF TI-SUSPEITA
+000228                MOVE 'SUSPEITA'      TO DT-OBS
+000229             ELSE
+000230                MOVE SPACES          TO DT-OBS
+000231             END-IF
+000232             PERFORM 7000-IMPRIMIR-DETALHE
+000233
+000234             ADD TI-VALOR TO WS-TOTAL-CARTAO WS-TOTAL-GERAL
+000235             PERFORM 8000-LER-APROVADA
+000236             .
+000237
+000238         2200-IMPRIMIR-TOTAL-CARTAO.
+000239             MOVE WS-CARTAO-ANTERIOR TO WS-CARTAO-ABERTO
+000240             PERFORM 9800-MASCARAR-CARTAO
+000241             MOVE WS-CARTAO-MASC     TO TC-CARTAO
+000242             MOVE WS-TOTAL-CARTAO    TO TC-VALOR
+GnuCOBOL 3.3-dev.0      sistema\work\FATRELA Fri Oct 30 2026 21:42:54  Page 0006
+
+LINE    PG/LN  A...B............................................................
+
+000243             WRITE REG-RELATORIO FROM WS-LINHA-TOTAL-CARTAO
+000244                   AFTER ADVANCING 1 LINE
+000245             MOVE SPACES TO REG-RELATORIO
+000246             WRITE REG-RELATORIO AFTER ADVANCING 1 LINE
+000247             ADD 2 TO WS-CONTA-LINHAS
+000248             .
+000249
+000250         3000-FINALIZAR.
+000251             PERFORM 7100-IMPRIMIR-CABECALHO
+000252             MOVE 'TOTAL POR CATEGORIA (MCC)' TO REG-RELATORIO
+000253             WRITE REG-RELATORIO AFTER ADVANCING 2 LINES
+000254             PERFORM VARYING IX-MCC FROM 1 BY 1
+000255                     UNTIL IX-MCC > WS-QTD-MCC
+000256                MOVE WS-MCC-CODIGO(IX-MCC)    TO LM-MCC
+000257                MOVE WS-MCC-DESCRICAO(IX-MCC) TO LM-DESCRICAO
+000258                MOVE WS-MCC-QTD(IX-MCC)       TO LM-QTD
+000259                MOVE WS-MCC-TOTAL(IX-MCC)     TO LM-VALOR
+000260                WRITE REG-RELATORIO FROM WS-LINHA-MCC
+000261                      AFTER ADVANCING 1 LINE
+000262             END-PERFORM
+000263             MOVE WS-QTD-CARTOES TO LG-QTD-CARTOES
+000264             MOVE WS-TOTAL-GERAL TO LG-VALOR
+000265             WRITE REG-RELATORIO FROM WS-LINHA-GERAL
+000266                   AFTER ADVANCING 2 LINES
+000267             CLOSE TRANS-APROVADA RELATORIO
+000268             DISPLAY 'FATRELAT - CARTOES NO RELATORIO: ' WS-QTD-CARTOES
+000269             .
+000270
+000271         7000-IMPRIMIR-DETALHE.
+000272             IF WS-CONTA-LINHAS >= WS-LINHAS-POR-PAGINA
+000273                PERFORM 7100-IMPRIMIR-CABECALHO
+000274             END-IF
+000275             WRITE REG-RELATORIO FROM WS-DETALHE
+000276                   AFTER ADVANCING 1 LINE
+000277             ADD 1 TO WS-CONTA-LINHAS
+000278             .
+000279
+000280         7100-IMPRIMIR-CABECALHO.
+000281             ADD 1 TO WS-PAGINA
+000282             MOVE WS-PAGINA TO CB1-PAGINA
+000283             WRITE REG-RELATORIO FROM WS-CAB-1 AFTER ADVANCING PAGE
+000284             WRITE REG-RELATORIO FROM WS-CAB-2 AFTER ADVANCING 2 LINES
+000285             MOVE ALL '-' TO REG-RELATORIO
+000286             WRITE REG-RELATORIO AFTER ADVANCING 1 LINE
+000287             MOVE 4 TO WS-CONTA-LINHAS
+000288             .
+000289
+000290         8000-LER-APROVADA.
+000291             READ TRANS-APROVADA
+000292                AT END CONTINUE
+000293             END-READ
+000294             IF NOT WS-FS-APR-OK AND NOT WS-FS-APR-FIM
+GnuCOBOL 3.3-dev.0      sistema\work\FATRELA Fri Oct 30 2026 21:42:54  Page 0007
+
+LINE    PG/LN  A...B............................................................
+
+000295                DISPLAY 'FATRELAT - ERRO NO READ DE APROVIN. FS='
+000296                        WS-FS-APROVADA
+000297                PERFORM 9900-ENCERRAR-COM-ERRO
+000298             END-IF
+000299             .
+000300
+000301             COPY CPMASCAR.
+000001C       *================================================================*
+000002C       * CPMASCAR - PARAGRAFO DE MASCARAMENTO DO NUMERO DO CARTAO       *
+000003C       * REGRA DO MODULO: EXIBIR SOMENTE OS 6 PRIMEIROS E OS 4 ULTIMOS  *
+000004C       * DIGITOS. O PROGRAMA PRECISA DECLARAR WS-CARTAO-ABERTO E        *
+000005C       * WS-CARTAO-MASC (AMBOS PIC X(16)). USO: MOVE O NUMERO PARA      *
+000006C       * WS-CARTAO-ABERTO E PERFORM 9800-MASCARAR-CARTAO.               *
+000007C       *================================================================*
+000008C        9800-MASCARAR-CARTAO.
+000009C            MOVE WS-CARTAO-ABERTO          TO WS-CARTAO-MASC
+000010C            MOVE '******'                  TO WS-CARTAO-MASC(7:6)
+000011C            .
+000302
+000303         9900-ENCERRAR-COM-ERRO.
+000304             MOVE 16 TO RETURN-CODE
+000305             STOP RUN
+000306             .
+
+
+0 warnings in compilation group
+0 errors in compilation group
