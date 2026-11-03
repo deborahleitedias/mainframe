@@ -130,17 +130,43 @@
            SET WS-REGISTRO-VALIDO TO TRUE
 
            EVALUATE TRUE
+
               WHEN TR-VALOR IS NOT NUMERIC
-                   SET WS-REGISTRO-INVALIDO   TO TRUE 
-                   SET RJ-VALOR-INVALIDO      TO TRUE
+                   SET WS-REGISTRO-INVALIDO TO TRUE
+                   SET RJ-VALOR-INVALIDO TO TRUE
                    MOVE 'VALOR NAO NUMERICO'
-                                            TO RJ-DESC-MOTIVO
+                       TO RJ-DESC-MOTIVO
+
               WHEN TR-VALOR = ZERO
-                   SET WS-REGISTRO-INVALIDO   TO TRUE 
-                   SET RJ-VALOR-INVALIDO      TO TRUE
+                   SET WS-REGISTRO-INVALIDO TO TRUE
+                   SET RJ-VALOR-INVALIDO TO TRUE
                    MOVE 'VALOR ZERADO'
-                                            TO RJ-DESC-MOTIVO
-            END-EVALUATE.
+                       TO RJ-DESC-MOTIVO
+
+              WHEN TR-DATA-TRANSACAO IS NOT NUMERIC
+                   SET WS-REGISTRO-INVALIDO TO TRUE
+                   SET RJ-DATA-INVALIDA TO TRUE
+                   MOVE 'DATA INVALIDA'
+                       TO RJ-DESC-MOTIVO
+
+              WHEN OTHER
+                   IF FUNCTION TEST-DATE-YYYYMMDD(
+                       TR-DATA-TRANSACAO) NOT = ZERO
+                      SET WS-REGISTRO-INVALIDO TO TRUE
+                      SET RJ-DATA-INVALIDA TO TRUE
+                      MOVE 'DATA INVALIDA'
+                          TO RJ-DESC-MOTIVO
+                   ELSE
+                      IF TR-NEGADA
+                         SET WS-REGISTRO-INVALIDO TO TRUE
+                         SET RJ-TRANSACAO-NEGADA TO TRUE
+                         MOVE 'TRANSACAO NEGADA'
+                             TO RJ-DESC-MOTIVO
+                      END-IF
+                   END-IF
+
+           END-EVALUATE
+           .
 
        2100-FIM-VALIDAR-TRANSACAO. EXIT.     
 
@@ -189,7 +215,7 @@
            END-IF
            .
        8000-FIM-LER-TRANSACAO. EXIT.
-       
+
        9900-ENCERRAR-COM-ERRO.
       *    PRONTO: ENCERRA COM RC 16 PARA IMPEDIR OS STEPS SEGUINTES.
            MOVE 16 TO RETURN-CODE
