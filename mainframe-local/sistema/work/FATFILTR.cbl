@@ -68,6 +68,9 @@
                88  WS-MES-VALIDO                VALUE 01 THRU 12.
            05  WS-DV-DIA              PIC 9(02).
                88  WS-DIA-VALIDO                VALUE 01 THRU 31.
+      
+       01  WS-PGM-LUHN                PIC X(08) VALUE 'LUHNVALD'.
+           COPY CPLUHN.
 
        PROCEDURE DIVISION.
        0000-PRINCIPAL.
@@ -128,8 +131,17 @@
 
            MOVE SPACES TO REG-REJEITADA
            SET WS-REGISTRO-VALIDO TO TRUE
+             
+           MOVE TR-NUM-CARTAO     TO LK-NUM-CARTAO
+           CALL WS-PGM-LUHN USING LK-AREA-LUHN
 
            EVALUATE TRUE
+
+           WHEN LK-CARTAO-INVALIDO
+                SET WS-REGISTRO-INVALIDO TO TRUE
+                SET RJ-CARTAO-INVALIDO   TO TRUE
+                 MOVE 'CARTAO COM DIGITO INVALIDO'
+                                         TO RJ-DESC-MOTIVO   
 
               WHEN TR-VALOR IS NOT NUMERIC
                    SET WS-REGISTRO-INVALIDO TO TRUE
@@ -278,7 +290,6 @@
        8000-FIM-LER-TRANSACAO. EXIT.
 
        9900-ENCERRAR-COM-ERRO.
-      *    PRONTO: ENCERRA COM RC 16 PARA IMPEDIR OS STEPS SEGUINTES.
            MOVE 16 TO RETURN-CODE
            STOP RUN
            .

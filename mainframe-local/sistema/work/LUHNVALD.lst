@@ -1,0 +1,73 @@
+GnuCOBOL 3.3-dev.0      sistema\work\LUHNVAL Wed Nov 04 2026 20:58:46  Page 0001
+
+LINE    PG/LN  A...B............................................................
+
+000001        *================================================================*
+000002        * PROGRAMA : LUHNVALD (SUBPROGRAMA)                              *
+000003        * AULA     : 9 - MODULARIZACAO                                   *
+000004        * OBJETIVO : VALIDAR O DIGITO VERIFICADOR DO NUMERO DO CARTAO    *
+000005        *            PELO ALGORITMO DE LUHN. EXTRAIDO DO FATCLASS.       *
+000006        * CHAMADA  : CALL 'LUHNVALD' USING LK-AREA-LUHN (COPY CPLUHN)    *
+000007        * RETORNO  : LK-RESULTADO = 'S' (VALIDO) OU 'N' (INVALIDO)       *
+000008        *================================================================*
+000009         IDENTIFICATION DIVISION.
+000010         PROGRAM-ID. LUHNVALD.
+000011
+000012         DATA DIVISION.
+000013         WORKING-STORAGE SECTION.
+000014         01  WS-LUHN-CARTAO             PIC X(16).
+000015         01  WS-LUHN-DIGITOS REDEFINES WS-LUHN-CARTAO.
+000016             05  WS-LUHN-DIGITO         PIC 9(01) OCCURS 16 TIMES.
+000017         01  WS-LUHN-POS                PIC 9(02).
+000018         01  WS-LUHN-PARCELA            PIC 9(02).
+000019         01  WS-LUHN-SOMA               PIC 9(03).
+000020         01  WS-LUHN-DOBRAR             PIC X(01).
+000021             88  WS-LUHN-DOBRA                    VALUE 'S'.
+000022             88  WS-LUHN-NAO-DOBRA                VALUE 'N'.
+000023
+000024         LINKAGE SECTION.
+000025             COPY CPLUHN.
+000001C       *================================================================*
+000002C       * CPLUHN   - AREA DE COMUNICACAO COM O SUBPROGRAMA LUHNVALD      *
+000003C       *================================================================*
+000004C        01  LK-AREA-LUHN.
+000005C            05  LK-NUM-CARTAO          PIC X(16).
+000006C            05  LK-RESULTADO           PIC X(01).
+000007C                88  LK-CARTAO-VALIDO             VALUE 'S'.
+000008C                88  LK-CARTAO-INVALIDO           VALUE 'N'.
+000026
+000027         PROCEDURE DIVISION USING LK-AREA-LUHN.
+000028         0000-PRINCIPAL.
+000029             SET LK-CARTAO-INVALIDO TO TRUE
+000030             MOVE LK-NUM-CARTAO     TO WS-LUHN-CARTAO
+000031             IF WS-LUHN-CARTAO IS NOT NUMERIC
+000032                GOBACK
+000033             END-IF
+000034             MOVE ZERO              TO WS-LUHN-SOMA
+000035             SET WS-LUHN-NAO-DOBRA  TO TRUE
+000036             PERFORM VARYING WS-LUHN-POS FROM 16 BY -1
+000037                     UNTIL WS-LUHN-POS < 1
+000038                MOVE WS-LUHN-DIGITO(WS-LUHN-POS) TO WS-LUHN-PARCELA
+000039                IF WS-LUHN-DOBRA
+000040                   COMPUTE WS-LUHN-PARCELA = WS-LUHN-PARCELA * 2
+000041                   IF WS-LUHN-PARCELA > 9
+000042                      SUBTRACT 9 FROM WS-LUHN-PARCELA
+000043                   END-IF
+000044                   SET WS-LUHN-NAO-DOBRA TO TRUE
+GnuCOBOL 3.3-dev.0      sistema\work\LUHNVAL Wed Nov 04 2026 20:58:46  Page 0002
+
+LINE    PG/LN  A...B............................................................
+
+000045                ELSE
+000046                   SET WS-LUHN-DOBRA     TO TRUE
+000047                END-IF
+000048                ADD WS-LUHN-PARCELA TO WS-LUHN-SOMA
+000049             END-PERFORM
+000050             IF FUNCTION MOD(WS-LUHN-SOMA, 10) = ZERO
+000051                SET LK-CARTAO-VALIDO TO TRUE
+000052             END-IF
+000053             GOBACK.
+
+
+0 warnings in compilation group
+0 errors in compilation group

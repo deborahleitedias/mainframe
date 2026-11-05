@@ -43,5 +43,15 @@
           //            DISP=(NEW,CATLG,DELETE),
           //            SPACE=(TRK,(5,5),RLSE),RECFM=FB,LRECL=120,BLKSIZE=0
           //*
-       23 // ENDIF
-       24 // ENDIF
+       23 // IF (STEP030.RC <= 4) THEN
+       24 //STEP040  EXEC PGM=FATRELAT
+       25 //STEPLIB  DD DSN=&SYSUID..FATURA.LOAD,DISP=SHR
+       26 //APROVIN  DD DSN=&SYSUID..FATURA.TRANS.APROV,DISP=SHR
+       27 //MCCTAB   DD DSN=&SYSUID..FATURA.MCC.TABELA,DISP=SHR
+       28 //RELATOUT DD DSN=&SYSUID..FATURA.RELAT,
+          //            DISP=(NEW,CATLG,DELETE),
+          //            SPACE=(TRK,(5,5),RLSE),
+          //            DCB=(RECFM=FBA,LRECL=133,BLKSIZE=0)
+       29 // ENDIF
+       30 // ENDIF
+       31 // ENDIF
