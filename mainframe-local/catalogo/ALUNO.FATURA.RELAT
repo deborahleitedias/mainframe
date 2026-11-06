@@ -20,9 +20,6 @@ CARTAO            DATA        MCC   CATEGORIA                       ESTABELECIME
 990000******3316  2026/10/05  5999  VAREJO DIVERSO                  TIENDA CENTRAL        ARG         6,200.00    SUSPEITA          
                   TOTAL DO CARTAO     990000******3316                                                    7,776.09                  
                                                                                                                                     
-990000******8750  2026/10/05  5411  SUPERMERCADOS                   MERCADO BOA COMPRA    BRA           123.45                      
-                  TOTAL DO CARTAO     990000******8750                                                      123.45                  
-                                                                                                                                    
 990000******8759  2026/10/05  7011  HOTEIS E HOSPEDAGEM             HOTEL MIRANTE         BRA           458.79                      
 990000******8759  2026/10/05  4121  TAXI E TRANSPORTE POR APP       VAI JA TRANSPORTES    BRA           454.41                      
 990000******8759  2026/10/05  5814  LANCHONETES E FAST FOOD         LANCHE RAPIDO         BRA           500.68                      
@@ -47,13 +44,13 @@ CARTAO            DATA        MCC   CATEGORIA                       ESTABELECIME
 990000******9980  2026/10/05  5814  LANCHONETES E FAST FOOD         LANCHE RAPIDO         BRA           162.96                      
 990000******9980  2026/10/05  5411  SUPERMERCADOS                   SUPER CESTA CHEIA     BRA           218.83                      
                   TOTAL DO CARTAO     990000******9980                                                      863.38                  
-                                                                                                                                    FATURA NOTURNA - RELATORIO DE FATURAS   (DADOS FICTICIOS)                                                               PAGINA    2 
+                                                                                                                                    
+990000******8463  2026/10/05  5999  VAREJO DIVERSO                  BAZAR POPULAR         BRA           365.52                      
+990000******8463  2026/10/05  5912  FARMACIAS                       DROGARIA SAUDE        BRA           358.30                      
+990000******8463  2026/10/05  7832  CINEMAS                         CINEMA SHOPPING       BRA           165.44                      FATURA NOTURNA - RELATORIO DE FATURAS   (DADOS FICTICIOS)                                                               PAGINA    2 
 
 CARTAO            DATA        MCC   CATEGORIA                       ESTABELECIMENTO       PAIS             VALOR  OBS               
 ------------------------------------------------------------------------------------------------------------------------------------
-990000******8463  2026/10/05  5999  VAREJO DIVERSO                  BAZAR POPULAR         BRA           365.52                      
-990000******8463  2026/10/05  5912  FARMACIAS                       DROGARIA SAUDE        BRA           358.30                      
-990000******8463  2026/10/05  7832  CINEMAS                         CINEMA SHOPPING       BRA           165.44                      
 990000******8463  2026/10/05  7832  CINEMAS                         CINE ARTE             BRA           184.43                      
 990000******8463  2026/10/05  5812  RESTAURANTES                    RESTAURANTE SABOR     BRA           152.22                      
 990000******8463  2026/10/05  5812  RESTAURANTES                    RESTAURANTE SABOR     BRA           112.86                      
@@ -96,13 +93,13 @@ CARTAO            DATA        MCC   CATEGORIA                       ESTABELECIME
 990000******9875  2026/10/05  5942  LIVRARIAS                       SEBO DO CENTRO        BRA           543.14                      
 990000******9875  2026/10/05  7832  CINEMAS                         CINEMA SHOPPING       BRA           271.24                      
 990000******9875  2026/10/05  5999  VAREJO DIVERSO                  BAZAR POPULAR         BRA            20.17                      
-990000******9875  2026/10/05  5541  POSTOS DE COMBUSTIVEL           AUTO POSTO RIO AZUL   BRA           560.56                      FATURA NOTURNA - RELATORIO DE FATURAS   (DADOS FICTICIOS)                                                               PAGINA    3 
+990000******9875  2026/10/05  5541  POSTOS DE COMBUSTIVEL           AUTO POSTO RIO AZUL   BRA           560.56                      
+990000******9875  2026/10/05  5541  POSTOS DE COMBUSTIVEL           POSTO ESTRELA         BRA           180.79                      
+                  TOTAL DO CARTAO     990000******9875                                                    1,992.91                  
+                                                                                                                                    FATURA NOTURNA - RELATORIO DE FATURAS   (DADOS FICTICIOS)                                                               PAGINA    3 
 
 CARTAO            DATA        MCC   CATEGORIA                       ESTABELECIMENTO       PAIS             VALOR  OBS               
 ------------------------------------------------------------------------------------------------------------------------------------
-990000******9875  2026/10/05  5541  POSTOS DE COMBUSTIVEL           POSTO ESTRELA         BRA           180.79                      
-                  TOTAL DO CARTAO     990000******9875                                                    1,992.91                  
-                                                                                                                                    
 990000******1519  2026/10/05  7011  HOTEIS E HOSPEDAGEM             HOTEL MIRANTE         BRA           499.49                      
 990000******1519  2026/10/05  4121  TAXI E TRANSPORTE POR APP       CORRIDA FACIL         BRA           112.35                      
 990000******1519  2026/10/05  5541  POSTOS DE COMBUSTIVEL           AUTO POSTO RIO AZUL   BRA           415.76                      
@@ -146,12 +143,12 @@ CARTAO            DATA        MCC   CATEGORIA                       ESTABELECIME
 990000******0029  2026/10/05  5999  VAREJO DIVERSO                  LOJA TUDO AQUI        BRA           565.21                      
 990000******0029  2026/10/05  5812  RESTAURANTES                    RESTAURANTE SABOR     BRA           402.20                      
                   TOTAL DO CARTAO     990000******0029                                                    1,194.42                  
-                                                                                                                                    FATURA NOTURNA - RELATORIO DE FATURAS   (DADOS FICTICIOS)                                                               PAGINA    4 
+                                                                                                                                    
+990000******4883  2026/10/05  5912  FARMACIAS                       DROGARIA SAUDE        BRA           494.67                      
+990000******4883  2026/10/05  5942  LIVRARIAS                       SEBO DO CENTRO        BRA           520.32                      FATURA NOTURNA - RELATORIO DE FATURAS   (DADOS FICTICIOS)                                                               PAGINA    4 
 
 CARTAO            DATA        MCC   CATEGORIA                       ESTABELECIMENTO       PAIS             VALOR  OBS               
 ------------------------------------------------------------------------------------------------------------------------------------
-990000******4883  2026/10/05  5912  FARMACIAS                       DROGARIA SAUDE        BRA           494.67                      
-990000******4883  2026/10/05  5942  LIVRARIAS                       SEBO DO CENTRO        BRA           520.32                      
 990000******4883  2026/10/05  4121  TAXI E TRANSPORTE POR APP       VAI JA TRANSPORTES    BRA           150.38                      
 990000******4883  2026/10/05  5814  LANCHONETES E FAST FOOD         LANCHE RAPIDO         BRA           568.61                      
 990000******4883  2026/10/05  7011  HOTEIS E HOSPEDAGEM             POUSADA DO LAGO       BRA            15.71                      
@@ -195,12 +192,12 @@ CARTAO            DATA        MCC   CATEGORIA                       ESTABELECIME
                                                                                                                                     
 990000******5713  2026/10/05  5541  POSTOS DE COMBUSTIVEL           AUTO POSTO RIO AZUL   BRA           292.39                      
 990000******5713  2026/10/05  5814  LANCHONETES E FAST FOOD         BURGER DA ESQUINA     BRA            23.87                      
-990000******5713  2026/10/05  7832  CINEMAS                         CINE ARTE             BRA           523.52                      FATURA NOTURNA - RELATORIO DE FATURAS   (DADOS FICTICIOS)                                                               PAGINA    5 
+990000******5713  2026/10/05  7832  CINEMAS                         CINE ARTE             BRA           523.52                      
+990000******5713  2026/10/05  7011  HOTEIS E HOSPEDAGEM             HOTEL MIRANTE         BRA           303.93                      
+990000******5713  2026/10/05  7832  CINEMAS                         CINEMA SHOPPING       BRA            36.61                      FATURA NOTURNA - RELATORIO DE FATURAS   (DADOS FICTICIOS)                                                               PAGINA    5 
 
 CARTAO            DATA        MCC   CATEGORIA                       ESTABELECIMENTO       PAIS             VALOR  OBS               
 ------------------------------------------------------------------------------------------------------------------------------------
-990000******5713  2026/10/05  7011  HOTEIS E HOSPEDAGEM             HOTEL MIRANTE         BRA           303.93                      
-990000******5713  2026/10/05  7832  CINEMAS                         CINEMA SHOPPING       BRA            36.61                      
 990000******5713  2026/10/05  7832  CINEMAS                         CINEMA SHOPPING       BRA           226.27                      
                   TOTAL DO CARTAO     990000******5713                                                    1,406.59                  
                                                                                                                                     
@@ -252,7 +249,7 @@ CARTAO            DATA        MCC   CATEGORIA                       ESTABELECIME
 
 TOTAL POR CATEGORIA (MCC)                                                                                                           
     4121  TAXI E TRANSPORTE POR APP              20             6,727.73                                                            
-    5411  SUPERMERCADOS                          18             3,828.03                                                            
+    5411  SUPERMERCADOS                          17             3,704.58                                                            
     5541  POSTOS DE COMBUSTIVEL                  15             4,820.75                                                            
     5812  RESTAURANTES                            8             2,062.95                                                            
     5814  LANCHONETES E FAST FOOD                24             5,934.36                                                            
@@ -262,4 +259,4 @@ TOTAL POR CATEGORIA (MCC)
     7011  HOTEIS E HOSPEDAGEM                    16            12,045.92                                                            
     7832  CINEMAS                                26             8,007.32                                                            
 
-TOTAL GERAL         CARTOES:         26          VALOR:           67,158.21                                                         
+TOTAL GERAL         CARTOES:         25          VALOR:           67,034.76                                                         
