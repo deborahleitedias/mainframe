@@ -1,0 +1,69 @@
+        1 //FATJCL04 JOB ,'FATURA NOTURNA',NOTIFY=&SYSUID,
+          //             CLASS=A,MSGCLASS=X
+          //*--------------------------------------------------------------------
+          //* AULA 4 - CHECKPOINT 2: JOB SO DE UTILITARIOS
+          //*   STEP005 APAGA O BACKUP DO DIA ANTERIOR (SE EXISTIR)
+          //*   STEP010 COPIA AS TRANSACOES PARA BACKUP (IEBGENER)
+          //*   STEP020 ORDENA POR CARTAO, DATA E HORA E GRAVA NOVA GERACAO
+          //*           DO GDG. SO RODA SE O BACKUP TERMINOU COM RC 0.
+          //*--------------------------------------------------------------------
+        2 //STEP005  EXEC PGM=IEFBR14
+        3 //BKPANT   DD DSN=&SYSUID..FATURA.TRANS.BKP,DISP=(MOD,DELETE),
+          //            SPACE=(TRK,(1,1)),RECFM=FB,LRECL=80
+        4 //APROVANT DD DSN=&SYSUID..FATURA.TRANS.APROV,DISP=(MOD,DELETE),
+          //            SPACE=(TRK,(1,1)),RECFM=FB,LRECL=80
+        5 //REJEIANT DD DSN=&SYSUID..FATURA.TRANS.REJEI,DISP=(MOD,DELETE),
+          //            SPACE=(TRK,(1,1)),RECFM=FB,LRECL=120
+        6 //DIVANT   DD DSN=&SYSUID..FATURA.DIVERG,DISP=(MOD,DELETE),
+          //            SPACE=(TRK,(1,1)),RECFM=FB,LRECL=80
+          //*
+        7 //STEP010  EXEC PGM=IEBGENER
+        8 //SYSPRINT DD SYSOUT=*
+        9 //SYSIN    DD DUMMY
+       10 //SYSUT1   DD DSN=&SYSUID..FATURA.TRANS.DIA,DISP=SHR
+       11 //SYSUT2   DD DSN=&SYSUID..FATURA.TRANS.BKP,DISP=(NEW,CATLG,DELETE),
+          //            SPACE=(TRK,(5,5),RLSE),RECFM=FB,LRECL=80,BLKSIZE=0
+          //*
+       12 // IF (STEP010.RC = 0) THEN
+       13 //STEP020  EXEC PGM=SORT
+       14 //SYSOUT   DD SYSOUT=*
+       15 //SORTIN   DD DSN=&SYSUID..FATURA.TRANS.DIA,DISP=SHR
+       16 //SORTOUT  DD DSN=&SYSUID..FATURA.TRANS.ORDEN(+1),
+          //            DISP=(NEW,CATLG,DELETE),
+          //            SPACE=(TRK,(5,5),RLSE),RECFM=FB,LRECL=80,BLKSIZE=0
+       17 //SYSIN    DD *
+          /*
+          //*
+       18 // IF (STEP020.RC = 0) THEN
+       19 //STEP030  EXEC PGM=FATFILTR
+       20 //STEPLIB  DD DSN=&SYSUID..FATURA.LOAD,DISP=SHR
+       21 //TRANSIN  DD DSN=&SYSUID..FATURA.TRANS.ORDEN(+1),DISP=SHR
+       22 //APROVOUT DD DSN=&SYSUID..FATURA.TRANS.APROV,
+          //            DISP=(NEW,CATLG,DELETE),
+          //            SPACE=(TRK,(5,5),RLSE),RECFM=FB,LRECL=80,BLKSIZE=0
+       23 //REJEIOUT DD DSN=&SYSUID..FATURA.TRANS.REJEI,
+          //            DISP=(NEW,CATLG,DELETE),
+          //            SPACE=(TRK,(5,5),RLSE),RECFM=FB,LRECL=120,BLKSIZE=0
+          //*
+       24 // IF (STEP030.RC <= 4) THEN
+       25 //STEP040  EXEC PGM=FATRELAT
+       26 //STEPLIB  DD DSN=&SYSUID..FATURA.LOAD,DISP=SHR
+       27 //APROVIN  DD DSN=&SYSUID..FATURA.TRANS.APROV,DISP=SHR
+       28 //MCCTAB   DD DSN=&SYSUID..FATURA.MCC.TABELA,DISP=SHR
+       29 //RELATOUT DD DSN=&SYSUID..FATURA.RELAT,
+          //            DISP=(NEW,CATLG,DELETE),
+          //            SPACE=(TRK,(5,5),RLSE),
+          //            DCB=(RECFM=FBA,LRECL=133,BLKSIZE=0)
+          //*
+       30 //STEP050  EXEC PGM=FATCONCI
+       31 //STEPLIB  DD DSN=&SYSUID..FATURA.LOAD,DISP=SHR
+       32 //FATIN    DD DSN=&SYSUID..FATURA.FATURAS.ABERTO,DISP=SHR
+       33 //PAGIN    DD DSN=&SYSUID..FATURA.PAGTOS.DIA,DISP=SHR
+       34 //DIVEROUT DD DSN=&SYSUID..FATURA.DIVERG,
+          //            DISP=(NEW,CATLG,DELETE),
+          //            SPACE=(TRK,(1,1),RLSE),RECFM=FB,LRECL=80,BLKSIZE=0
+       35 //SYSOUT   DD SYSOUT=*
+       36 //CEEDUMP  DD SYSOUT=*
+       37 // ENDIF
+       38 // ENDIF
+       39 // ENDIF
