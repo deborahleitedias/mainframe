@@ -11,7 +11,7 @@
 //*   //CL       EXEC IGYWCL,PARM.COBOL='LIST'
 //* E PROCURE O OFFSET NA LISTAGEM (CL:SYSPRINT DO STEP COBOL).
 //*--------------------------------------------------------------------
-//         SET PGM=FATCONCI
+//         SET PGM=FATRESUM
 //*
 //CL       EXEC IGYWCL
 //COBOL.SYSIN  DD DSN=&SYSUID..FATURA.COBOL(&PGM),DISP=SHR

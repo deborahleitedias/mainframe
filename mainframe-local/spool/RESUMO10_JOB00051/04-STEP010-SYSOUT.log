@@ -1,0 +1,22 @@
+========================================
+       RESUMO DE DIVERGENCIAS
+========================================
+TIPO: PS - PAGAMENTO SEM FATURA
+QUANTIDADE: 000000003
+VALOR FATURA: 0000000000000
+VALOR PAGO:   0000000479237
+----------------------------------------
+TIPO: FS - FATURA SEM PAGAMENTO
+QUANTIDADE: 000000013
+VALOR FATURA: 0000003205928
+VALOR PAGO:   0000000000000
+----------------------------------------
+TIPO: PM - PAGAMENTO A MENOR
+QUANTIDADE: 000000004
+VALOR FATURA: 0000000912970
+VALOR PAGO:   0000000456484
+========================================
+TOTAL DE REGISTROS: 000000020
+TOTAL VALOR FATURA: 0000004118898
+TOTAL VALOR PAGO:   0000000935721
+========================================

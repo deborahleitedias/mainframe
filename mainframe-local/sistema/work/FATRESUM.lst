@@ -1,0 +1,198 @@
+GnuCOBOL 3.3-dev.0      sistema\work\FATRESU Mon Nov 09 2026 16:43:56  Page 0001
+
+LINE    PG/LN  A...B............................................................
+
+000001         IDENTIFICATION DIVISION.
+000002         PROGRAM-ID. FATRESUM.
+000003
+000004         ENVIRONMENT DIVISION.
+000005         INPUT-OUTPUT SECTION.
+000006         FILE-CONTROL.
+000007             SELECT DIVERGENCIA
+000008                 ASSIGN TO DIVERIN
+000009                 ORGANIZATION IS SEQUENTIAL
+000010                 FILE STATUS IS WS-FS.
+000011
+000012         DATA DIVISION.
+000013         FILE SECTION.
+000014
+000015         FD  DIVERGENCIA
+000016             RECORD CONTAINS 80 CHARACTERS.
+000017         01  FD-REGISTRO              PIC X(80).
+000018
+000019         WORKING-STORAGE SECTION.
+000020
+000021         COPY CPDIVER.
+000001C       *================================================================*
+000002C       * CPDIVER  - DIVERGENCIA DA CONCILIACAO DE PAGAMENTOS            *
+000003C       * LRECL 80, RECFM FB.                                            *
+000004C       *================================================================*
+000005C        01  REG-DIVERGENCIA.
+000006C            05  DV-NUM-CARTAO-MASC     PIC X(16).
+000007C            05  DV-TIPO                PIC X(02).
+000008C                88  DV-PAGTO-SEM-FATURA          VALUE 'PS'.
+000009C                88  DV-FATURA-SEM-PAGTO          VALUE 'FS'.
+000010C                88  DV-PAGTO-A-MENOR             VALUE 'PM'.
+000011C            05  DV-VALOR-FATURA        PIC 9(09)V99.
+000012C            05  DV-VALOR-PAGO          PIC 9(09)V99.
+000013C            05  FILLER                 PIC X(40).
+000022
+000023         01  WS-FS                    PIC XX.
+000024
+000025         01  WS-QUANTIDADES.
+000026             05 WS-QT-PS              PIC 9(09) VALUE ZERO.
+000027             05 WS-QT-FS              PIC 9(09) VALUE ZERO.
+000028             05 WS-QT-PM              PIC 9(09) VALUE ZERO.
+000029             05 WS-QT-TOTAL           PIC 9(09) VALUE ZERO.
+000030
+000031         01  WS-VALORES.
+000032             05 WS-FAT-PS             PIC 9(11)V99 VALUE ZERO.
+000033             05 WS-PAG-PS             PIC 9(11)V99 VALUE ZERO.
+000034             05 WS-FAT-FS             PIC 9(11)V99 VALUE ZERO.
+000035             05 WS-PAG-FS             PIC 9(11)V99 VALUE ZERO.
+000036             05 WS-FAT-PM             PIC 9(11)V99 VALUE ZERO.
+000037             05 WS-PAG-PM             PIC 9(11)V99 VALUE ZERO.
+000038
+000039             05 WS-FAT-TOTAL          PIC 9(11)V99 VALUE ZERO.
+GnuCOBOL 3.3-dev.0      sistema\work\FATRESU Mon Nov 09 2026 16:43:56  Page 0002
+
+LINE    PG/LN  A...B............................................................
+
+000040             05 WS-PAG-TOTAL          PIC 9(11)V99 VALUE ZERO.
+000041
+000042         PROCEDURE DIVISION.
+000043
+000044         0000-PRINCIPAL.
+000045             PERFORM 1000-INICIALIZAR THRU 1000-FIM-INICIALIZAR
+000046             PERFORM 2000-PROCESSAR THRU 2000-FIM-PROCESSAR
+000047             PERFORM 3000-FINALIZAR THRU 3000-FIM-FINALIZAR
+000048             STOP RUN.
+000049
+000050         1000-INICIALIZAR.
+000051             OPEN INPUT DIVERGENCIA
+000052
+000053             IF WS-FS NOT = '00'
+000054                 DISPLAY 'ERRO NO OPEN: ' WS-FS
+000055                 STOP RUN
+000056             END-IF.
+000057
+000058         1000-FIM-INICIALIZAR.
+000059             EXIT.
+000060
+000061         2000-PROCESSAR.
+000062             PERFORM UNTIL WS-FS = '10'
+000063
+000064                 READ DIVERGENCIA
+000065                     AT END
+000066                         CONTINUE
+000067                     NOT AT END
+000068                         MOVE FD-REGISTRO TO REG-DIVERGENCIA
+000069
+000070                         PERFORM 2100-CLASSIFICAR
+000071                             THRU 2100-FIM
+000072                 END-READ
+000073
+000074                 IF WS-FS NOT = '00' AND WS-FS NOT = '10'
+000075                     DISPLAY 'ERRO NO READ: ' WS-FS
+000076                     STOP RUN
+000077                 END-IF
+000078
+000079             END-PERFORM.
+000080
+000081         2000-FIM-PROCESSAR.
+000082             EXIT.
+000083
+000084         2100-CLASSIFICAR.
+000085             EVALUATE TRUE
+000086
+000087                 WHEN DV-PAGTO-SEM-FATURA
+000088                     ADD 1 TO WS-QT-PS
+000089                     ADD DV-VALOR-FATURA TO WS-FAT-PS
+000090                     ADD DV-VALOR-PAGO TO WS-PAG-PS
+000091
+GnuCOBOL 3.3-dev.0      sistema\work\FATRESU Mon Nov 09 2026 16:43:56  Page 0003
+
+LINE    PG/LN  A...B............................................................
+
+000092                 WHEN DV-FATURA-SEM-PAGTO
+000093                     ADD 1 TO WS-QT-FS
+000094                     ADD DV-VALOR-FATURA TO WS-FAT-FS
+000095                     ADD DV-VALOR-PAGO TO WS-PAG-FS
+000096
+000097                 WHEN DV-PAGTO-A-MENOR
+000098                     ADD 1 TO WS-QT-PM
+000099                     ADD DV-VALOR-FATURA TO WS-FAT-PM
+000100                     ADD DV-VALOR-PAGO TO WS-PAG-PM
+000101
+000102                 WHEN OTHER
+000103                     DISPLAY 'TIPO DE DIVERGENCIA INVALIDO: '
+000104                         DV-TIPO
+000105
+000106             END-EVALUATE.
+000107
+000108         2100-FIM.
+000109             EXIT.
+000110
+000111         3000-FINALIZAR.
+000112
+000113             COMPUTE WS-QT-TOTAL =
+000114                 WS-QT-PS + WS-QT-FS + WS-QT-PM
+000115
+000116             COMPUTE WS-FAT-TOTAL =
+000117                 WS-FAT-PS + WS-FAT-FS + WS-FAT-PM
+000118
+000119             COMPUTE WS-PAG-TOTAL =
+000120                 WS-PAG-PS + WS-PAG-FS + WS-PAG-PM
+000121
+000122             DISPLAY '========================================'
+000123             DISPLAY '       RESUMO DE DIVERGENCIAS'
+000124             DISPLAY '========================================'
+000125
+000126             DISPLAY 'TIPO: PS - PAGAMENTO SEM FATURA'
+000127             DISPLAY 'QUANTIDADE: ' WS-QT-PS
+000128             DISPLAY 'VALOR FATURA: ' WS-FAT-PS
+000129             DISPLAY 'VALOR PAGO:   ' WS-PAG-PS
+000130
+000131             DISPLAY '----------------------------------------'
+000132
+000133             DISPLAY 'TIPO: FS - FATURA SEM PAGAMENTO'
+000134             DISPLAY 'QUANTIDADE: ' WS-QT-FS
+000135             DISPLAY 'VALOR FATURA: ' WS-FAT-FS
+000136             DISPLAY 'VALOR PAGO:   ' WS-PAG-FS
+000137
+000138             DISPLAY '----------------------------------------'
+000139
+000140             DISPLAY 'TIPO: PM - PAGAMENTO A MENOR'
+000141             DISPLAY 'QUANTIDADE: ' WS-QT-PM
+000142             DISPLAY 'VALOR FATURA: ' WS-FAT-PM
+000143             DISPLAY 'VALOR PAGO:   ' WS-PAG-PM
+GnuCOBOL 3.3-dev.0      sistema\work\FATRESU Mon Nov 09 2026 16:43:56  Page 0004
+
+LINE    PG/LN  A...B............................................................
+
+000144
+000145             DISPLAY '========================================'
+000146             DISPLAY 'TOTAL DE REGISTROS: ' WS-QT-TOTAL
+000147             DISPLAY 'TOTAL VALOR FATURA: ' WS-FAT-TOTAL
+000148             DISPLAY 'TOTAL VALOR PAGO:   ' WS-PAG-TOTAL
+000149             DISPLAY '========================================'
+000150
+000151             CLOSE DIVERGENCIA
+000152
+000153             IF WS-FS NOT = '00'
+000154                 DISPLAY 'ERRO NO CLOSE: ' WS-FS
+000155             END-IF.
+000156
+000157         3000-FIM-FINALIZAR.
+000158             EXIT.
+warning: line not terminated by a newline
+
+
+GnuCOBOL 3.3-dev.0      sistema\work\FATRESU Mon Nov 09 2026 16:43:56  Page 0005
+
+Error/Warning summary:
+
+sistema\work\FATRESUM.cbl:158: warning: line not terminated by a newline
+
+1 warning in compilation group
+0 errors in compilation group
