@@ -1,0 +1,328 @@
+GnuCOBOL 3.3-dev.0      sistema\work\PEDEXTR Wed Nov 11 2026 12:47:10  Page 0001
+
+LINE    PG/LN  A...B............................................................
+
+000001        *================================================================*
+000002        * PROGRAMA : PEDEXTRT                                            *
+000003        * SISTEMA  : PEDAGIO NOTURNO (DADOS 100% FICTICIOS)              *
+000004        * OBJETIVO : EMITIR O EXTRATO DIARIO DE PASSAGENS: DETALHE POR   *
+000005        *            PASSAGEM, TOTAL POR TAG (QUEBRA DE CONTROLE) E      *
+000006        *            TOTAL GERAL. A TAG E SEMPRE EXIBIDA MASCARADA       *
+000007        *            (4 PRIMEIROS E 4 ULTIMOS DIGITOS).                  *
+000008        * ENTRADA  : DD APROVIN  - APROVADAS DO PEDVALID, FB 80,         *
+000009        *                          ORDENADAS POR TAG, DATA E HORA        *
+000010        * SAIDA    : DD EXTROUT  - EXTRATO, FBA 133 (LINHA DE 132 +      *
+000011        *                          CARACTERE DE CONTROLE DO ADVANCING)   *
+000012        * RETORNO  : 0 = OK, 16 = ERRO DE ARQUIVO                        *
+000013        * HISTORICO: 01/10/2026 VERSAO INICIAL                           *
+000014        *================================================================*
+000015         IDENTIFICATION DIVISION.
+000016         PROGRAM-ID. PEDEXTRT.
+000017
+000018         ENVIRONMENT DIVISION.
+000019         INPUT-OUTPUT SECTION.
+000020         FILE-CONTROL.
+000021             SELECT APROVADA       ASSIGN TO APROVIN
+000022                    FILE STATUS IS WS-FS-APROVADA.
+000023             SELECT EXTRATO        ASSIGN TO EXTROUT
+000024                    FILE STATUS IS WS-FS-EXTRATO.
+000025
+000026         DATA DIVISION.
+000027         FILE SECTION.
+000028        *--- PASSAGEM APROVADA (LAYOUT IGUAL AO DO PEDVALID) ------------*
+000029         FD  APROVADA
+000030             RECORDING MODE IS F.
+000031         01  REG-APROVADA.
+000032             05  PA-TAG                 PIC X(12).
+000033             05  PA-PRACA               PIC X(03).
+000034             05  PA-DATA                PIC 9(08).
+000035             05  PA-HORA                PIC 9(06).
+000036             05  PA-CATEGORIA           PIC 9(01).
+000037             05  PA-VALOR               PIC S9(05)V99 COMP-3.
+000038             05  PA-TIPO                PIC X(01).
+000039                 88  PA-PAGA                      VALUE 'P'.
+000040                 88  PA-ISENTA                    VALUE 'I'.
+000041             05  PA-NOME-PRACA          PIC X(20).
+000042             05  PA-SENTIDO             PIC X(01).
+000043             05  FILLER                 PIC X(24).
+000044         FD  EXTRATO
+000045             RECORDING MODE IS F.
+000046         01  REG-EXTRATO                PIC X(132).
+000047
+000048         WORKING-STORAGE SECTION.
+000049         01  WS-FS-APROVADA             PIC X(02).
+000050             88  WS-FS-APR-OK                     VALUE '00'.
+000051             88  WS-FS-APR-FIM                    VALUE '10'.
+000052         01  WS-FS-EXTRATO              PIC X(02).
+GnuCOBOL 3.3-dev.0      sistema\work\PEDEXTR Wed Nov 11 2026 12:47:10  Page 0002
+
+LINE    PG/LN  A...B............................................................
+
+000053             88  WS-FS-EXT-OK                     VALUE '00'.
+000054
+000055        *--- CONTROLE DA QUEBRA -----------------------------------------*
+000056         01  WS-TAG-ANTERIOR            PIC X(12).
+000057         01  WS-TOTAL-TAG               PIC S9(07)V99 COMP-3.
+000058         01  WS-PASSAGENS-TAG           PIC 9(05).
+000059         01  WS-TOTAL-GERAL             PIC S9(09)V99 COMP-3 VALUE ZERO.
+000060         01  WS-QTD-TAGS                PIC 9(07) VALUE ZERO.
+000061         01  WS-QTD-PASSAGENS           PIC 9(07) VALUE ZERO.
+000062         01  WS-VALOR-EDITADO           PIC ZZZ,ZZZ,ZZ9.99.
+000063
+000064        *--- PAGINACAO --------------------------------------------------*
+000065         01  WS-LINHAS-POR-PAGINA       PIC 9(03) VALUE 50.
+000066         01  WS-CONTA-LINHAS            PIC 9(03) VALUE 99.
+000067         01  WS-PAGINA                  PIC 9(04) VALUE ZERO.
+000068
+000069        *--- MASCARAMENTO -----------------------------------------------*
+000070         01  WS-TAG-ABERTA              PIC X(12).
+000071         01  WS-TAG-MASC                PIC X(12).
+000072
+000073         01  WS-HORA-AUX.
+000074             05  WS-HH                  PIC X(02).
+000075             05  WS-MM                  PIC X(02).
+000076             05  WS-SS                  PIC X(02).
+000077
+000078        *--- LINHAS DO EXTRATO ------------------------------------------*
+000079         01  WS-CAB-1.
+000080             05  FILLER                 PIC X(40) VALUE
+000081                 'PEDAGIO NOTURNO - EXTRATO DE PASSAGENS'.
+000082             05  FILLER                 PIC X(20) VALUE
+000083                 '(DADOS FICTICIOS)'.
+000084             05  FILLER                 PIC X(60) VALUE SPACES.
+000085             05  FILLER                 PIC X(07) VALUE 'PAGINA '.
+000086             05  CB1-PAGINA             PIC ZZZ9.
+000087             05  FILLER                 PIC X(01) VALUE SPACE.
+000088         01  WS-CAB-2.
+000089             05  FILLER                 PIC X(14) VALUE 'TAG'.
+000090             05  FILLER                 PIC X(12) VALUE 'DATA'.
+000091             05  FILLER                 PIC X(10) VALUE 'HORA'.
+000092             05  FILLER                 PIC X(22) VALUE 'PRACA'.
+000093             05  FILLER                 PIC X(05) VALUE 'CAT'.
+000094             05  FILLER                 PIC X(03) VALUE 'SEN'.
+000095             05  FILLER                 PIC X(09) VALUE '    VALOR'.
+000096             05  FILLER                 PIC X(03) VALUE SPACES.
+000097             05  FILLER                 PIC X(10) VALUE 'OBS'.
+000098         01  WS-DETALHE.
+000099             05  DT-TAG                 PIC X(12).
+000100             05  FILLER                 PIC X(02) VALUE SPACES.
+000101             05  DT-DATA                PIC 9999/99/99.
+000102             05  FILLER                 PIC X(02) VALUE SPACES.
+000103             05  DT-HH                  PIC X(02).
+000104             05  FILLER                 PIC X(01) VALUE ':'.
+GnuCOBOL 3.3-dev.0      sistema\work\PEDEXTR Wed Nov 11 2026 12:47:10  Page 0003
+
+LINE    PG/LN  A...B............................................................
+
+000105             05  DT-MM                  PIC X(02).
+000106             05  FILLER                 PIC X(01) VALUE ':'.
+000107             05  DT-SS                  PIC X(02).
+000108             05  FILLER                 PIC X(02) VALUE SPACES.
+000109             05  DT-PRACA               PIC X(20).
+000110             05  FILLER                 PIC X(02) VALUE SPACES.
+000111             05  DT-CATEGORIA           PIC 9(01).
+000112             05  FILLER                 PIC X(04) VALUE SPACES.
+000113             05  DT-SENTIDO             PIC X(01).
+000114             05  FILLER                 PIC X(02) VALUE SPACES.
+000115             05  DT-VALOR               PIC ZZ,ZZ9.99.
+000116             05  FILLER                 PIC X(03) VALUE SPACES.
+000117             05  DT-OBS                 PIC X(10).
+000118         01  WS-LINHA-TOTAL-TAG.
+000119             05  FILLER                 PIC X(14) VALUE SPACES.
+000120             05  FILLER                 PIC X(14) VALUE 'TOTAL DA TAG'.
+000121             05  TT-TAG                 PIC X(12).
+000122             05  FILLER                 PIC X(04) VALUE SPACES.
+000123             05  FILLER                 PIC X(11) VALUE 'PASSAGENS: '.
+000124             05  TT-PASSAGENS           PIC ZZZZ9.
+000125             05  FILLER                 PIC X(13) VALUE SPACES.
+000126             05  FILLER                 PIC X(07) VALUE 'VALOR: '.
+000127             05  TT-VALOR               PIC Z,ZZZ,ZZ9.99.
+000128         01  WS-LINHA-GERAL.
+000129             05  FILLER                 PIC X(14) VALUE 'TOTAL GERAL'.
+000130             05  FILLER                 PIC X(06) VALUE 'TAGS: '.
+000131             05  LG-TAGS                PIC Z,ZZZ,ZZ9.
+000132             05  FILLER                 PIC X(04) VALUE SPACES.
+000133             05  FILLER                 PIC X(11) VALUE 'PASSAGENS: '.
+000134             05  LG-PASSAGENS           PIC Z,ZZZ,ZZ9.
+000135             05  FILLER                 PIC X(04) VALUE SPACES.
+000136             05  FILLER                 PIC X(07) VALUE 'VALOR: '.
+000137             05  LG-VALOR               PIC ZZZ,ZZZ,ZZ9.99.
+000138
+000139         PROCEDURE DIVISION.
+000140         0000-PRINCIPAL.
+000141             PERFORM 1000-INICIALIZAR THRU 1000-FIM-INICIALIZAR
+000142             PERFORM 2000-PROCESSAR-TAG THRU 2000-FIM-PROCESSAR-TAG
+000143                UNTIL WS-FS-APR-FIM
+000144             PERFORM 3000-FINALIZAR THRU 3000-FIM-FINALIZAR
+000145             STOP RUN.
+000146         0000-FIM-PRINCIPAL.
+000147             EXIT.
+000148
+000149         1000-INICIALIZAR.
+000150             OPEN INPUT  APROVADA
+000151             IF NOT WS-FS-APR-OK
+000152                DISPLAY 'PEDEXTRT - ERRO NO OPEN DE APROVIN. FS='
+000153                        WS-FS-APROVADA
+000154                PERFORM 9900-ENCERRAR-COM-ERRO
+000155                   THRU 9900-FIM-ENCERRAR-COM-ERRO
+000156             END-IF
+GnuCOBOL 3.3-dev.0      sistema\work\PEDEXTR Wed Nov 11 2026 12:47:10  Page 0004
+
+LINE    PG/LN  A...B............................................................
+
+000157             OPEN OUTPUT EXTRATO
+000158             IF NOT WS-FS-EXT-OK
+000159                DISPLAY 'PEDEXTRT - ERRO NO OPEN DE EXTROUT. FS='
+000160                        WS-FS-EXTRATO
+000161                PERFORM 9900-ENCERRAR-COM-ERRO
+000162                   THRU 9900-FIM-ENCERRAR-COM-ERRO
+000163             END-IF
+000164        *    LEITURA ANTECIPADA: A PRIMEIRA PASSAGEM E LIDA AQUI
+000165             PERFORM 8000-LER-APROVADA THRU 8000-FIM-LER-APROVADA.
+000166         1000-FIM-INICIALIZAR.
+000167             EXIT.
+000168
+000169        *----------------------------------------------------------------*
+000170        * QUEBRA DE CONTROLE: UM CICLO DESTE PARAGRAFO = UMA TAG         *
+000171        *----------------------------------------------------------------*
+000172         2000-PROCESSAR-TAG.
+000173             MOVE PA-TAG TO WS-TAG-ANTERIOR
+000174             MOVE ZERO   TO WS-TOTAL-TAG
+000175             MOVE ZERO   TO WS-PASSAGENS-TAG
+000176             ADD 1       TO WS-QTD-TAGS
+000177             PERFORM 2100-PROCESSAR-PASSAGEM
+000178                THRU 2100-FIM-PROCESSAR-PASSAGEM
+000179                UNTIL WS-FS-APR-FIM
+000180                   OR PA-TAG NOT = WS-TAG-ANTERIOR
+000181             PERFORM 2200-IMPRIMIR-TOTAL-TAG
+000182                THRU 2200-FIM-IMPRIMIR-TOTAL-TAG.
+000183         2000-FIM-PROCESSAR-TAG.
+000184             EXIT.
+000185
+000186         2100-PROCESSAR-PASSAGEM.
+000187             ADD PA-VALOR TO WS-TOTAL-TAG WS-TOTAL-GERAL
+000188             ADD 1        TO WS-PASSAGENS-TAG WS-QTD-PASSAGENS
+000189
+000190             MOVE PA-TAG             TO WS-TAG-ABERTA
+000191             PERFORM 9800-MASCARAR-TAG THRU 9800-FIM-MASCARAR-TAG
+000192             MOVE WS-TAG-MASC        TO DT-TAG
+000193             MOVE PA-DATA            TO DT-DATA
+000194             MOVE PA-HORA            TO WS-HORA-AUX
+000195             MOVE WS-HH              TO DT-HH
+000196             MOVE WS-MM              TO DT-MM
+000197             MOVE WS-SS              TO DT-SS
+000198             MOVE PA-NOME-PRACA      TO DT-PRACA
+000199             MOVE PA-CATEGORIA       TO DT-CATEGORIA
+000200             MOVE PA-SENTIDO         TO DT-SENTIDO
+000201             MOVE PA-VALOR           TO DT-VALOR
+000202             IF PA-ISENTA
+000203                MOVE 'ISENTA'        TO DT-OBS
+000204             ELSE
+000205                MOVE SPACES          TO DT-OBS
+000206             END-IF
+000207             PERFORM 7000-IMPRIMIR-DETALHE THRU 7000-FIM-IMPRIMIR-DETALHE
+000208             PERFORM 8000-LER-APROVADA THRU 8000-FIM-LER-APROVADA.
+GnuCOBOL 3.3-dev.0      sistema\work\PEDEXTR Wed Nov 11 2026 12:47:10  Page 0005
+
+LINE    PG/LN  A...B............................................................
+
+000209         2100-FIM-PROCESSAR-PASSAGEM.
+000210             EXIT.
+000211
+000212         2200-IMPRIMIR-TOTAL-TAG.
+000213             MOVE WS-TAG-ANTERIOR    TO WS-TAG-ABERTA
+000214             PERFORM 9800-MASCARAR-TAG THRU 9800-FIM-MASCARAR-TAG
+000215             MOVE WS-TAG-MASC        TO TT-TAG
+000216             MOVE WS-PASSAGENS-TAG   TO TT-PASSAGENS
+000217             MOVE WS-TOTAL-TAG       TO TT-VALOR
+000218             WRITE REG-EXTRATO FROM WS-LINHA-TOTAL-TAG
+000219                   AFTER ADVANCING 1 LINE
+000220             MOVE SPACES TO REG-EXTRATO
+000221             WRITE REG-EXTRATO AFTER ADVANCING 1 LINE
+000222             ADD 2 TO WS-CONTA-LINHAS.
+000223         2200-FIM-IMPRIMIR-TOTAL-TAG.
+000224             EXIT.
+000225
+000226         3000-FINALIZAR.
+000227             MOVE WS-QTD-TAGS        TO LG-TAGS
+000228             MOVE WS-QTD-PASSAGENS   TO LG-PASSAGENS
+000229             MOVE WS-TOTAL-GERAL     TO LG-VALOR
+000230             WRITE REG-EXTRATO FROM WS-LINHA-GERAL
+000231                   AFTER ADVANCING 2 LINES
+000232             CLOSE APROVADA
+000233             IF NOT WS-FS-APR-OK
+000234                DISPLAY 'PEDEXTRT - ERRO NO CLOSE DE APROVIN. FS='
+000235                        WS-FS-APROVADA
+000236                PERFORM 9900-ENCERRAR-COM-ERRO
+000237                   THRU 9900-FIM-ENCERRAR-COM-ERRO
+000238             END-IF
+000239             CLOSE EXTRATO
+000240             IF NOT WS-FS-EXT-OK
+000241                DISPLAY 'PEDEXTRT - ERRO NO CLOSE DE EXTROUT. FS='
+000242                        WS-FS-EXTRATO
+000243                PERFORM 9900-ENCERRAR-COM-ERRO
+000244                   THRU 9900-FIM-ENCERRAR-COM-ERRO
+000245             END-IF
+000246             MOVE WS-TOTAL-GERAL     TO WS-VALOR-EDITADO
+000247             DISPLAY 'PEDEXTRT - TAGS NO EXTRATO ...: ' WS-QTD-TAGS
+000248             DISPLAY 'PEDEXTRT - PASSAGENS .........: ' WS-QTD-PASSAGENS
+000249             DISPLAY 'PEDEXTRT - VALOR TOTAL .......: ' WS-VALOR-EDITADO
+000250             MOVE 0 TO RETURN-CODE.
+000251         3000-FIM-FINALIZAR.
+000252             EXIT.
+000253
+000254         7000-IMPRIMIR-DETALHE.
+000255             IF WS-CONTA-LINHAS >= WS-LINHAS-POR-PAGINA
+000256                PERFORM 7100-IMPRIMIR-CABECALHO
+000257                   THRU 7100-FIM-IMPRIMIR-CABECALHO
+000258             END-IF
+000259             WRITE REG-EXTRATO FROM WS-DETALHE
+000260                   AFTER ADVANCING 1 LINE
+GnuCOBOL 3.3-dev.0      sistema\work\PEDEXTR Wed Nov 11 2026 12:47:10  Page 0006
+
+LINE    PG/LN  A...B............................................................
+
+000261             ADD 1 TO WS-CONTA-LINHAS.
+000262         7000-FIM-IMPRIMIR-DETALHE.
+000263             EXIT.
+000264
+000265         7100-IMPRIMIR-CABECALHO.
+000266             ADD 1 TO WS-PAGINA
+000267             MOVE WS-PAGINA TO CB1-PAGINA
+000268             WRITE REG-EXTRATO FROM WS-CAB-1 AFTER ADVANCING PAGE
+000269             WRITE REG-EXTRATO FROM WS-CAB-2 AFTER ADVANCING 2 LINES
+000270             MOVE ALL '-' TO REG-EXTRATO
+000271             WRITE REG-EXTRATO AFTER ADVANCING 1 LINE
+000272             MOVE 4 TO WS-CONTA-LINHAS.
+000273         7100-FIM-IMPRIMIR-CABECALHO.
+000274             EXIT.
+000275
+000276         8000-LER-APROVADA.
+000277             READ APROVADA
+000278                AT END CONTINUE
+000279             END-READ
+000280             IF NOT WS-FS-APR-OK AND NOT WS-FS-APR-FIM
+000281                DISPLAY 'PEDEXTRT - ERRO NO READ DE APROVIN. FS='
+000282                        WS-FS-APROVADA
+000283                PERFORM 9900-ENCERRAR-COM-ERRO
+000284                   THRU 9900-FIM-ENCERRAR-COM-ERRO
+000285             END-IF.
+000286         8000-FIM-LER-APROVADA.
+000287             EXIT.
+000288
+000289        *    MASCARAMENTO: SO OS 4 PRIMEIROS E OS 4 ULTIMOS DIGITOS
+000290         9800-MASCARAR-TAG.
+000291             MOVE WS-TAG-ABERTA      TO WS-TAG-MASC
+000292             MOVE '****'             TO WS-TAG-MASC(5:4).
+000293         9800-FIM-MASCARAR-TAG.
+000294             EXIT.
+000295
+000296         9900-ENCERRAR-COM-ERRO.
+000297             MOVE 16 TO RETURN-CODE
+000298             STOP RUN.
+000299         9900-FIM-ENCERRAR-COM-ERRO.
+000300             EXIT.
+
+
+0 warnings in compilation group
+0 errors in compilation group

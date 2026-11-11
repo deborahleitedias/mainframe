@@ -1,9 +1,0 @@
-        1 //RESUMO10 JOB ,'RESUMO DIVERGENCIAS',NOTIFY=&SYSUID,
-          //             CLASS=A,MSGCLASS=X
-          //*----------------------------------------------------
-          //* EXECUCAO DO RESUMO DE DIVERGENCIAS (FATRESUM)
-          //*----------------------------------------------------
-        2 //STEP010  EXEC PGM=FATRESUM
-        3 //STEPLIB  DD DSN=&SYSUID..FATURA.LOAD,DISP=SHR
-        4 //DIVERIN  DD DSN=&SYSUID..FATURA.DIVERG,DISP=SHR
-        5 //SYSOUT   DD SYSOUT=*

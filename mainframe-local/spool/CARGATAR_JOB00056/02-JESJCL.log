@@ -1,0 +1,14 @@
+        1 //CARGATAR JOB ,'PEDAGIO NOTURNO',NOTIFY=&SYSUID,
+          //             CLASS=A,MSGCLASS=X
+          //*--------------------------------------------------------------------
+          //* PEDAGIO NOTURNO - CARGA DA TABELA DE TARIFAS DO DIA
+          //* A AREA COMERCIAL ENVIA A TABELA TODO DIA. ANTES DE CADA EXECUCAO
+          //* DO PEDNOITE, CARREGA-SE A TABELA DO DIA NO PEDAGIO.TARIFA.
+          //* TABELA DO DIA.
+          //*--------------------------------------------------------------------
+        2 //STEP010  EXEC PGM=IEBGENER
+        3 //SYSPRINT DD SYSOUT=*
+        4 //SYSIN    DD DUMMY
+        5 //SYSUT2   DD DSN=&SYSUID..PEDAGIO.TARIFA,DISP=OLD
+        6 //SYSUT1   DD *
+          /*

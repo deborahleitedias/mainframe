@@ -1,0 +1,86 @@
+PEDAGIO NOTURNO - PACOTE DA AVALIACAO PRATICA (AULA 12)
+=======================================================
+
+O SISTEMA
+Uma concessionaria de rodovias FICTICIA recebe das placas de pedagio,
+toda noite, o arquivo com as passagens de veiculos com TAG. O job
+PEDNOITE ordena as passagens, valida cada uma contra a tabela de
+tarifas e emite o extrato do dia por TAG.
+
+Todos os dados sao ficticios: as TAGs comecam com 999 e nao
+correspondem a TAGs reais. Mesmo assim, a TAG identifica o veiculo e,
+por meio dele, uma pessoa: em relatorio, DISPLAY e formulario ela
+aparece sempre mascarada (4 primeiros e 4 ultimos digitos). O arquivo
+de rejeitadas guarda o registro original, como na Fatura (insumo de
+reprocessamento, de acesso restrito).
+
+  PASSAGEM.DIA --> STEP010 SORT --> STEP020 PEDVALID --> STEP030 PEDEXTRT
+  (fora de ordem)  (GDG ORDEN +1)         ^      |       (quebra por TAG)
+                                          |      |                |
+                                  PEDAGIO.TARIFA  +--> REJEITADAS  +--> EXTRATO (GDG)
+
+  STEP005  IEFBR14   apaga APROV e REJEI da execucao anterior      RC 0
+  STEP010  SORT      ordena por TAG, data e hora (GDG ORDEN)       RC 0
+  STEP020  PEDVALID  carrega a tabela de tarifas (45 linhas,       RC 4
+                     9 pracas x 5 categorias) com SEARCH ALL,      (houve
+                     valida cada passagem, grava aprovadas com o   rejeitadas)
+                     valor em COMP-3 e rejeitadas com o motivo
+  STEP030  PEDEXTRT  extrato com detalhe, total por TAG e total    RC 0
+                     geral (GDG EXTRATO)
+
+A tabela de tarifas e enviada TODO DIA pela area comercial: antes de
+cada execucao do PEDNOITE, carrega-se a tabela do dia no PEDAGIO.TARIFA
+(job CARGATAR). Por isso as duas partes da avaliacao comecam carregando
+uma tabela.
+
+O QUE VEM NESTA PASTA
+  ALOCPED.jcl   cria os arquivos PEDAGIO.* e as bases GDG (uma vez so)
+  CARGAPED.jcl  carrega as 120 passagens do dia (uma vez so)
+  CARGATAR.jcl  carrega a tabela de tarifas do dia
+  PEDNOITE.jcl  o job noturno
+  PRTPED.jcl    mostra o PEDAGIO.PASSAGEM.APROV em hexadecimal
+  PEDVALID.cbl  validacao das passagens
+  PEDEXTRT.cbl  extrato por TAG
+
+As bibliotecas sao as do projeto (FATURA.JCL, FATURA.COBOL,
+FATURA.LOAD). So os dados ganham o prefixo PEDAGIO. Nada do projeto da
+Fatura e alterado: nao e preciso fazer copia de nada antes.
+
+PREPARACAO (FACA ANTES DA AULA 12, CERCA DE 20 MINUTOS)
+1. Copie os arquivos .jcl desta pasta para catalogo\ALUNO.FATURA.JCL
+   e os arquivos .cbl para catalogo\ALUNO.FATURA.COBOL
+   (o "Upload Member": arraste para a pasta no VS Code).
+2. Submeta o ALOCPED (uma vez so). Esperado: RC 0 nos dois steps.
+3. Submeta o CARGAPED e depois o CARGATAR. Esperado: RC 0 nos dois.
+4. Compile o PEDVALID e o PEDEXTRT com o COMPILA do projeto, trocando
+   o SET PGM= a cada vez. Esperado: COBOL e LKED com RC 0 ou 4.
+5. Submeta o PEDNOITE. Esperado:
+     STEP005 RC 0, STEP010 RC 0, STEP020 RC 4, STEP030 RC 0
+     STEP020 (SYSOUT do PEDVALID): 120 lidas, 111 aprovadas,
+       9 rejeitadas, valor aprovado 1,403.30
+     STEP030 (SYSOUT do PEDEXTRT): 20 TAGs, 111 passagens, 1,403.30
+   Esta e a sua ULTIMA EXECUCAO BOA. Anote os numeros e guarde uma
+   copia da pasta do job (spool\PEDNOITE_JOBnnnnn) num lugar seguro:
+   ela e a referencia para comparar durante a avaliacao.
+6. Leia os dois programas e o PEDNOITE. Nao e preciso estudar a fundo,
+   mas na sustentacao a primeira coisa a fazer com um sistema novo e
+   conhecer o fluxo e o que cada step grava.
+
+Para ver um arquivo registro a registro: VER ALUNO.PEDAGIO.TARIFA
+(o PEDAGIO.PASSAGEM.APROV tem COMP-3: use o PRTPED, nao o editor).
+
+SE PRECISAR REFAZER A PREPARACAO
+Apague da pasta catalogo os arquivos que comecam com ALUNO.PEDAGIO
+(e, dentro de catalogo\.atrib, os que comecam com ALUNO.PEDAGIO) e
+recomece do passo 2.
+
+NO DIA DA AVALIACAO
+- E individual. Toda a turma recebe os mesmos incidentes, na mesma
+  ordem. Microfone fechado; duvidas de ambiente no chat privado.
+- Em cada parte voce vai receber os arquivos do dia. Em cada uma:
+  (1) identifique o step e o sintoma, (2) encontre a causa,
+  (3) corrija e reexecute ate o job terminar como esperado,
+  (4) preencha o formulario de causa raiz (o mesmo do treino da
+  aula 11) e entregue no privado.
+- Nunca escreva a TAG completa no formulario: no maximo os 4 primeiros
+  e os 4 ultimos digitos.

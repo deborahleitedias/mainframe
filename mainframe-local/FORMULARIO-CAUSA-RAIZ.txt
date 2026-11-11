@@ -1,0 +1,17 @@
+FORMULARIO DE ANALISE DE CAUSA RAIZ
+Um formulario por incidente. Nunca o cartao completo: no maximo os 6
+primeiros e os 4 ultimos digitos.
+
+INCIDENTE      : (job, step, data e hora)
+SINTOMA        : (o que foi observado: abend, RC, reclamacao)
+EVIDENCIAS     : (mensagens, codigos, linhas do spool, dados)
+CAUSA RAIZ     : (o defeito que, corrigido, impede a repeticao)
+5 PORQUES      : 1. ...
+                 2. ...
+                 3. ...
+                 4. ...
+                 5. ...
+CONTORNO       : (o que foi feito para liberar o processamento, se algo)
+CORRECAO       : (a mudanca definitiva)
+REPROCESSAMENTO: (o que foi reexecutado e por que e seguro)
+PREVENCAO      : (o que evita a recorrencia: validacao, revisao, teste)
