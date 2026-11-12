@@ -5,15 +5,15 @@ SIM020I SORT EXECUTADO PELO GCSORT (COMPATIVEL COM DFSORT)
 GCSORT Version 01.04.00
 ========================================================
 TAKE file name
-sistema\work\JOB00060_STEP010.take
+sistema\work\JOB00082_STEP010.take
 ========================================================
 ====================================================================
  Total Records Number..............:       120
  Total Records Write Sort..........:         0
  Total Records Write Output........:       120
 ====================================================================
-Start    : Wed Nov 11 12:48:06 2026
-End      : Wed Nov 11 12:48:09 2026
+Start    : Thu Nov 12 09:53:44 2026
+End      : Thu Nov 12 09:53:47 2026
 Elapsed  Time 00hh 00mm 03ss 000ms
 
 GCSORT - Sort OK
