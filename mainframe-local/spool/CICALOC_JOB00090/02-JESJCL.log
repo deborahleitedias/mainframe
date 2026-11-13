@@ -1,0 +1,36 @@
+        1 //CICALOC  JOB ,'CICLO DO CARTAO',NOTIFY=&SYSUID,
+          //             CLASS=A,MSGCLASS=X
+          //*--------------------------------------------------------------------
+          //* ALOCACAO DAS BIBLIOTECAS E DOS ARQUIVOS DE ENTRADA DO PROJETO
+          //* CICLO DO CARTAO. EXECUTAR UMA UNICA VEZ, DEPOIS RODAR O CICCARGA.
+          //* AS SAIDAS DOS PROGRAMAS SAO CRIADAS PELOS PROPRIOS JOBS.
+          //*--------------------------------------------------------------------
+        2 //STEP010  EXEC PGM=IEFBR14
+        3 //COBOL    DD DSN=&SYSUID..CICLO.COBOL,DISP=(NEW,CATLG),
+          //            SPACE=(TRK,(10,5,20)),DSNTYPE=PDS,
+          //            RECFM=FB,LRECL=80,BLKSIZE=0
+        4 //JCL      DD DSN=&SYSUID..CICLO.JCL,DISP=(NEW,CATLG),
+          //            SPACE=(TRK,(10,5,20)),DSNTYPE=PDS,
+          //            RECFM=FB,LRECL=80,BLKSIZE=0
+        5 //COPY     DD DSN=&SYSUID..CICLO.COPY,DISP=(NEW,CATLG),
+          //            SPACE=(TRK,(5,5,20)),DSNTYPE=PDS,
+          //            RECFM=FB,LRECL=80,BLKSIZE=0
+        6 //LOAD     DD DSN=&SYSUID..CICLO.LOAD,DISP=(NEW,CATLG),
+          //            SPACE=(TRK,(15,5)),DSNTYPE=LIBRARY,
+          //            RECFM=U,LRECL=0,BLKSIZE=32760
+        7 //BINTAB   DD DSN=&SYSUID..CICLO.BIN.TABELA,DISP=(NEW,CATLG),
+          //            SPACE=(TRK,(1,1)),RECFM=FB,LRECL=80,BLKSIZE=0
+        8 //IRDTAB   DD DSN=&SYSUID..CICLO.IRD.TABELA,DISP=(NEW,CATLG),
+          //            SPACE=(TRK,(1,1)),RECFM=FB,LRECL=80,BLKSIZE=0
+        9 //CONTAS   DD DSN=&SYSUID..CICLO.CONTAS,DISP=(NEW,CATLG),
+          //            SPACE=(TRK,(1,1)),RECFM=FB,LRECL=80,BLKSIZE=0
+       10 //PEDIDOS  DD DSN=&SYSUID..CICLO.AUTH.PEDIDOS,DISP=(NEW,CATLG),
+          //            SPACE=(TRK,(2,1)),RECFM=FB,LRECL=80,BLKSIZE=0
+       11 //CLRALFA  DD DSN=&SYSUID..CICLO.CLEAR.ALFA,DISP=(NEW,CATLG),
+          //            SPACE=(TRK,(2,1)),RECFM=FB,LRECL=80,BLKSIZE=0
+       12 //CLRBETA  DD DSN=&SYSUID..CICLO.CLEAR.BETA,DISP=(NEW,CATLG),
+          //            SPACE=(TRK,(2,1)),RECFM=FB,LRECL=80,BLKSIZE=0
+       13 //CONTEST  DD DSN=&SYSUID..CICLO.CONTEST,DISP=(NEW,CATLG),
+          //            SPACE=(TRK,(1,1)),RECFM=FB,LRECL=80,BLKSIZE=0
+       14 //DATAMOV  DD DSN=&SYSUID..CICLO.DATA.MOVTO,DISP=(NEW,CATLG),
+          //            SPACE=(TRK,(1,1)),RECFM=FB,LRECL=80,BLKSIZE=0

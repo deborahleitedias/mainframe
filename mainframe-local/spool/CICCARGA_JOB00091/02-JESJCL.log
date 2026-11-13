@@ -1,0 +1,63 @@
+        1 //CICCARGA JOB ,'CICLO DO CARTAO',NOTIFY=&SYSUID,
+          //             CLASS=A,MSGCLASS=X
+          //*--------------------------------------------------------------------
+          //* CARGA DA MASSA FICTICIA DO CICLO DO CARTAO NOS DATASETS CRIADOS
+          //* PELO CICALOC. OS DADOS VEM NO PROPRIO JOB (DD *). PODE SER
+          //* SUBMETIDO DE NOVO PARA RESTAURAR A MASSA ORIGINAL.
+          //*--------------------------------------------------------------------
+          //* TABELA DE BINS
+        2 //STEP010  EXEC PGM=IEBGENER
+        3 //SYSPRINT DD SYSOUT=*
+        4 //SYSIN    DD DUMMY
+        5 //SYSUT2   DD DSN=&SYSUID..CICLO.BIN.TABELA,DISP=OLD
+        6 //SYSUT1   DD *
+          /*
+          //* TABELA DE IRD
+        7 //STEP020  EXEC PGM=IEBGENER
+        8 //SYSPRINT DD SYSOUT=*
+        9 //SYSIN    DD DUMMY
+       10 //SYSUT2   DD DSN=&SYSUID..CICLO.IRD.TABELA,DISP=OLD
+       11 //SYSUT1   DD *
+          /*
+          //* CONTAS DOS EMISSORES
+       12 //STEP030  EXEC PGM=IEBGENER
+       13 //SYSPRINT DD SYSOUT=*
+       14 //SYSIN    DD DUMMY
+       15 //SYSUT2   DD DSN=&SYSUID..CICLO.CONTAS,DISP=OLD
+       16 //SYSUT1   DD *
+          /*
+          //* PEDIDOS DE AUTORIZACAO
+       17 //STEP040  EXEC PGM=IEBGENER
+       18 //SYSPRINT DD SYSOUT=*
+       19 //SYSIN    DD DUMMY
+       20 //SYSUT2   DD DSN=&SYSUID..CICLO.AUTH.PEDIDOS,DISP=OLD
+       21 //SYSUT1   DD *
+          /*
+          //* CLEARING DA BANDEIRA ALFA
+       22 //STEP050  EXEC PGM=IEBGENER
+       23 //SYSPRINT DD SYSOUT=*
+       24 //SYSIN    DD DUMMY
+       25 //SYSUT2   DD DSN=&SYSUID..CICLO.CLEAR.ALFA,DISP=OLD
+       26 //SYSUT1   DD *
+          /*
+          //* CLEARING DA BANDEIRA BETA
+       27 //STEP060  EXEC PGM=IEBGENER
+       28 //SYSPRINT DD SYSOUT=*
+       29 //SYSIN    DD DUMMY
+       30 //SYSUT2   DD DSN=&SYSUID..CICLO.CLEAR.BETA,DISP=OLD
+       31 //SYSUT1   DD *
+          /*
+          //* CONTESTACOES DOS PORTADORES
+       32 //STEP070  EXEC PGM=IEBGENER
+       33 //SYSPRINT DD SYSOUT=*
+       34 //SYSIN    DD DUMMY
+       35 //SYSUT2   DD DSN=&SYSUID..CICLO.CONTEST,DISP=OLD
+       36 //SYSUT1   DD *
+          /*
+          //* DATA DE MOVIMENTO
+       37 //STEP080  EXEC PGM=IEBGENER
+       38 //SYSPRINT DD SYSOUT=*
+       39 //SYSIN    DD DUMMY
+       40 //SYSUT2   DD DSN=&SYSUID..CICLO.DATA.MOVTO,DISP=OLD
+       41 //SYSUT1   DD *
+          /*

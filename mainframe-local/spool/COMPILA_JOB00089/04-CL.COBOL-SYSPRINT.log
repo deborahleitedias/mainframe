@@ -1,0 +1,442 @@
+SIM031I COMPILACAO COM GNUCOBOL (-std=ibm), PROGRAMA PEDVALID (PRINCIPAL)
+
+
+
+GnuCOBOL 3.3-dev.0      sistema\work\PEDVALI Fri Nov 13 2026 18:34:23  Page 0001
+
+LINE    PG/LN  A...B............................................................
+
+000001        *================================================================*
+000002        * PROGRAMA : PEDVALID                                            *
+000003        * SISTEMA  : PEDAGIO NOTURNO (DADOS 100% FICTICIOS)              *
+000004        * OBJETIVO : LER AS PASSAGENS DO DIA (JA ORDENADAS PELO SORT),   *
+000005        *            VALIDAR CADA UMA CONTRA A TABELA DE TARIFAS E       *
+000006        *            SEPARAR EM DOIS ARQUIVOS: APROVADAS (FORMATO        *
+000007        *            INTERNO, VALOR EM COMP-3) E REJEITADAS (REGISTRO    *
+000008        *            ORIGINAL + MOTIVO).                                 *
+000009        * ENTRADAS : DD PASSIN   - PASSAGENS, FB 80                      *
+000010        *            DD TARIFA   - TABELA DE TARIFAS, FB 80, ORDENADA    *
+000011        *                          POR PRACA E CATEGORIA                 *
+000012        * SAIDAS   : DD APROVOUT - APROVADAS, FB 80                      *
+000013        *            DD REJEIOUT - REJEITADAS, FB 120                    *
+000014        * RETORNO  : 0 = OK, 4 = HOUVE REJEITADAS, 16 = ERRO DE ARQUIVO  *
+000015        * HISTORICO: 01/10/2026 VERSAO INICIAL                           *
+000016        *================================================================*
+000017         IDENTIFICATION DIVISION.
+000018         PROGRAM-ID. PEDVALID.
+000019
+000020         ENVIRONMENT DIVISION.
+000021         INPUT-OUTPUT SECTION.
+000022         FILE-CONTROL.
+000023             SELECT PASSAGEM       ASSIGN TO PASSIN
+000024                    FILE STATUS IS WS-FS-PASSAGEM.
+000025             SELECT TABELA-TARIFA  ASSIGN TO TARIFA
+000026                    FILE STATUS IS WS-FS-TARIFA.
+000027             SELECT APROVADA       ASSIGN TO APROVOUT
+000028                    FILE STATUS IS WS-FS-APROVADA.
+000029             SELECT REJEITADA      ASSIGN TO REJEIOUT
+000030                    FILE STATUS IS WS-FS-REJEITADA.
+000031
+000032         DATA DIVISION.
+000033         FILE SECTION.
+000034        *--- PASSAGEM RECEBIDA DAS PRACAS (TEXTO, 80 COLUNAS) -----------*
+000035         FD  PASSAGEM
+000036             RECORDING MODE IS F.
+000037         01  REG-PASSAGEM.
+000038             05  PS-TAG                 PIC X(12).
+000039             05  PS-PRACA               PIC X(03).
+000040             05  PS-DATA                PIC 9(08).
+000041             05  PS-HORA                PIC 9(06).
+000042             05  PS-CATEGORIA           PIC 9(01).
+000043                 88  PS-ISENTA                    VALUE 9.
+000044             05  PS-VALOR               PIC 9(05)V99.
+000045             05  PS-SENTIDO             PIC X(01).
+000046             05  FILLER                 PIC X(42).
+000047        *--- TABELA DE TARIFAS (TEXTO, 80 COLUNAS) ----------------------*
+000048         FD  TABELA-TARIFA
+000049             RECORDING MODE IS F.
+000050         01  REG-TARIFA.
+000051             05  TF-CHAVE.
+000052                 10  TF-PRACA           PIC X(03).
+GnuCOBOL 3.3-dev.0      sistema\work\PEDVALI Fri Nov 13 2026 18:34:23  Page 0002
+
+LINE    PG/LN  A...B............................................................
+
+000053                 10  TF-CATEGORIA       PIC 9(01).
+000054             05  TF-VALOR               PIC 9(03)V99.
+000055             05  TF-NOME-PRACA          PIC X(20).
+000056             05  FILLER                 PIC X(51).
+000057        *--- PASSAGEM APROVADA (LAYOUT IGUAL AO DO PEDEXTRT) ------------*
+000058        *    ESTE ARQUIVO E BINARIO (COMP-3): NAO TRANSFERIR COMO TEXTO.
+000059         FD  APROVADA
+000060             RECORDING MODE IS F.
+000061         01  REG-APROVADA.
+000062             05  PA-TAG                 PIC X(12).
+000063             05  PA-PRACA               PIC X(03).
+000064             05  PA-DATA                PIC 9(08).
+000065             05  PA-HORA                PIC 9(06).
+000066             05  PA-CATEGORIA           PIC 9(01).
+000067             05  PA-VALOR               PIC S9(05)V99 COMP-3.
+000068             05  PA-TIPO                PIC X(01).
+000069                 88  PA-PAGA                      VALUE 'P'.
+000070                 88  PA-ISENTA                    VALUE 'I'.
+000071             05  PA-NOME-PRACA          PIC X(20).
+000072             05  PA-SENTIDO             PIC X(01).
+000073             05  FILLER                 PIC X(24).
+000074        *--- PASSAGEM REJEITADA: REGISTRO ORIGINAL + MOTIVO -------------*
+000075        *    INSUMO DE REPROCESSAMENTO, DE ACESSO RESTRITO.
+000076         FD  REJEITADA
+000077             RECORDING MODE IS F.
+000078         01  REG-REJEITADA.
+000079             05  RJ-REGISTRO-ORIGINAL   PIC X(80).
+000080             05  RJ-COD-MOTIVO          PIC 9(02).
+000081             05  RJ-DESC-MOTIVO         PIC X(30).
+000082             05  FILLER                 PIC X(08).
+000083
+000084         WORKING-STORAGE SECTION.
+000085         01  WS-FS-PASSAGEM             PIC X(02).
+000086             88  WS-FS-PAS-OK                     VALUE '00'.
+000087             88  WS-FS-PAS-FIM                    VALUE '10'.
+000088         01  WS-FS-TARIFA               PIC X(02).
+000089             88  WS-FS-TAR-OK                     VALUE '00'.
+000090             88  WS-FS-TAR-FIM                    VALUE '10'.
+000091         01  WS-FS-APROVADA             PIC X(02).
+000092             88  WS-FS-APR-OK                     VALUE '00'.
+000093         01  WS-FS-REJEITADA            PIC X(02).
+000094             88  WS-FS-REJ-OK                     VALUE '00'.
+000095
+000096         01  WS-CONTADORES.
+000097             05  WS-QTD-LIDAS           PIC 9(07) VALUE ZERO.
+000098             05  WS-QTD-APROVADAS       PIC 9(07) VALUE ZERO.
+000099             05  WS-QTD-ISENTAS         PIC 9(07) VALUE ZERO.
+000100             05  WS-QTD-REJEITADAS      PIC 9(07) VALUE ZERO.
+000101             05  WS-QTD-POR-MOTIVO      PIC 9(07) OCCURS 6 TIMES.
+000102         01  WS-VALOR-APROVADO          PIC S9(09)V99 COMP-3 VALUE ZERO.
+000103         01  WS-VALOR-EDITADO           PIC ZZZ,ZZZ,ZZ9.99.
+000104         01  WS-MOT                     PIC 9(02).
+GnuCOBOL 3.3-dev.0      sistema\work\PEDVALI Fri Nov 13 2026 18:34:23  Page 0003
+
+LINE    PG/LN  A...B............................................................
+
+000105
+000106        *--- MOTIVOS DE REJEICAO ----------------------------------------*
+000107         01  WS-MOTIVOS-TEXTO.
+000108             05  FILLER  PIC X(30) VALUE 'TAG INVALIDA'.
+000109             05  FILLER  PIC X(30) VALUE 'DATA DA PASSAGEM INVALIDA'.
+000110             05  FILLER  PIC X(30) VALUE 'VALOR NAO NUMERICO'.
+000111             05  FILLER  PIC X(30) VALUE 'PRACA/CATEGORIA SEM TARIFA'.
+000112             05  FILLER  PIC X(30) VALUE 'VALOR DIFERENTE DA TARIFA'.
+000113             05  FILLER  PIC X(30) VALUE 'PASSAGEM ISENTA, SEM COBRANCA'.
+000114         01  WS-MOTIVOS REDEFINES WS-MOTIVOS-TEXTO.
+000115             05  WS-DESC-MOTIVO         PIC X(30) OCCURS 6 TIMES.
+000116
+000117         01  WS-VALIDACAO               PIC X(01).
+000118             88  WS-REGISTRO-VALIDO               VALUE 'S'.
+000119             88  WS-REGISTRO-INVALIDO             VALUE 'N'.
+000120
+000121         01  WS-DATA-VALIDAR.
+000122             05  WS-DV-ANO              PIC 9(04).
+000123             05  WS-DV-MES              PIC 9(02).
+000124                 88  WS-MES-VALIDO                VALUE 01 THRU 12.
+000125             05  WS-DV-DIA              PIC 9(02).
+000126                 88  WS-DIA-VALIDO                VALUE 01 THRU 31.
+000127
+000128        *--- TABELA DE TARIFAS EM MEMORIA (CARREGADA DO DD TARIFA) ------*
+000129        *    AS POSICOES NAO USADAS FICAM COM HIGH-VALUES NA CHAVE PARA
+000130        *    QUE A TABELA CONTINUE EM ORDEM CRESCENTE (EXIGENCIA DO
+000131        *    SEARCH ALL). O ARQUIVO PRECISA VIR ORDENADO POR CHAVE.
+000132         01  WS-MAX-TARIFA              PIC 9(03) VALUE 80.
+000133         01  WS-QTD-TARIFA              PIC 9(03) VALUE ZERO.
+000134         01  WS-TABELA-TARIFA.
+000135             05  WS-TF-ITEM OCCURS 80 TIMES
+000136                            ASCENDING KEY IS WS-TF-CHAVE
+000137                            INDEXED BY IX-TF.
+000138                 10  WS-TF-CHAVE        PIC X(04).
+000139                 10  WS-TF-VALOR        PIC 9(03)V99.
+000140                 10  WS-TF-NOME         PIC X(20).
+000141
+000142         01  WS-CHAVE-BUSCA.
+000143             05  WS-CB-PRACA            PIC X(03).
+000144             05  WS-CB-CATEGORIA        PIC 9(01).
+000145         01  WS-TARIFA-ACHADA           PIC X(01).
+000146             88  WS-ACHOU-TARIFA                  VALUE 'S'.
+000147             88  WS-SEM-TARIFA                    VALUE 'N'.
+000148         01  WS-VALOR-TARIFA            PIC 9(03)V99.
+000149         01  WS-NOME-PRACA              PIC X(20).
+000150
+000151         PROCEDURE DIVISION.
+000152         0000-PRINCIPAL.
+000153             PERFORM 1000-INICIALIZAR THRU 1000-FIM-INICIALIZAR
+000154             PERFORM 2000-PROCESSAR THRU 2000-FIM-PROCESSAR
+000155                UNTIL WS-FS-PAS-FIM
+000156             PERFORM 3000-FINALIZAR THRU 3000-FIM-FINALIZAR
+GnuCOBOL 3.3-dev.0      sistema\work\PEDVALI Fri Nov 13 2026 18:34:23  Page 0004
+
+LINE    PG/LN  A...B............................................................
+
+000157             STOP RUN.
+000158         0000-FIM-PRINCIPAL.
+000159             EXIT.
+000160
+000161         1000-INICIALIZAR.
+000162             INITIALIZE WS-CONTADORES
+000163             OPEN INPUT TABELA-TARIFA
+000164             IF NOT WS-FS-TAR-OK
+000165                DISPLAY 'PEDVALID - ERRO NO OPEN DE TARIFA. FS='
+000166                        WS-FS-TARIFA
+000167                PERFORM 9900-ENCERRAR-COM-ERRO
+000168                   THRU 9900-FIM-ENCERRAR-COM-ERRO
+000169             END-IF
+000170             PERFORM VARYING IX-TF FROM 1 BY 1
+000171                     UNTIL IX-TF > WS-MAX-TARIFA
+000172                MOVE HIGH-VALUES TO WS-TF-CHAVE(IX-TF)
+000173                MOVE ZERO        TO WS-TF-VALOR(IX-TF)
+000174                MOVE SPACES      TO WS-TF-NOME(IX-TF)
+000175             END-PERFORM
+000176             PERFORM 1100-CARREGAR-TARIFA THRU 1100-FIM-CARREGAR-TARIFA
+000177                UNTIL WS-FS-TAR-FIM
+000178             CLOSE TABELA-TARIFA
+000179             IF NOT WS-FS-TAR-OK
+000180                DISPLAY 'PEDVALID - ERRO NO CLOSE DE TARIFA. FS='
+000181                        WS-FS-TARIFA
+000182                PERFORM 9900-ENCERRAR-COM-ERRO
+000183                   THRU 9900-FIM-ENCERRAR-COM-ERRO
+000184             END-IF
+000185
+000186             OPEN INPUT  PASSAGEM
+000187             IF NOT WS-FS-PAS-OK
+000188                DISPLAY 'PEDVALID - ERRO NO OPEN DE PASSIN. FS='
+000189                        WS-FS-PASSAGEM
+000190                PERFORM 9900-ENCERRAR-COM-ERRO
+000191                   THRU 9900-FIM-ENCERRAR-COM-ERRO
+000192             END-IF
+000193             OPEN OUTPUT APROVADA
+000194             IF NOT WS-FS-APR-OK
+000195                DISPLAY 'PEDVALID - ERRO NO OPEN DE APROVOUT. FS='
+000196                        WS-FS-APROVADA
+000197                PERFORM 9900-ENCERRAR-COM-ERRO
+000198                   THRU 9900-FIM-ENCERRAR-COM-ERRO
+000199             END-IF
+000200             OPEN OUTPUT REJEITADA
+000201             IF NOT WS-FS-REJ-OK
+000202                DISPLAY 'PEDVALID - ERRO NO OPEN DE REJEIOUT. FS='
+000203                        WS-FS-REJEITADA
+000204                PERFORM 9900-ENCERRAR-COM-ERRO
+000205                   THRU 9900-FIM-ENCERRAR-COM-ERRO
+000206             END-IF
+000207        *    LEITURA ANTECIPADA: A PRIMEIRA PASSAGEM E LIDA AQUI
+000208             PERFORM 8000-LER-PASSAGEM THRU 8000-FIM-LER-PASSAGEM.
+GnuCOBOL 3.3-dev.0      sistema\work\PEDVALI Fri Nov 13 2026 18:34:23  Page 0005
+
+LINE    PG/LN  A...B............................................................
+
+000209         1000-FIM-INICIALIZAR.
+000210             EXIT.
+000211
+000212         1100-CARREGAR-TARIFA.
+000213             READ TABELA-TARIFA
+000214                AT END
+000215                   CONTINUE
+000216                NOT AT END
+000217                   IF WS-QTD-TARIFA >= WS-MAX-TARIFA
+000218                      DISPLAY 'PEDVALID - TABELA DE TARIFAS CHEIA'
+000219                      PERFORM 9900-ENCERRAR-COM-ERRO
+000220                         THRU 9900-FIM-ENCERRAR-COM-ERRO
+000221                   END-IF
+000222                   ADD 1 TO WS-QTD-TARIFA
+000223                   MOVE TF-CHAVE      TO WS-TF-CHAVE(WS-QTD-TARIFA)
+000224                   MOVE TF-VALOR      TO WS-TF-VALOR(WS-QTD-TARIFA)
+000225                   MOVE TF-NOME-PRACA TO WS-TF-NOME(WS-QTD-TARIFA)
+000226             END-READ
+000227             IF NOT WS-FS-TAR-OK AND NOT WS-FS-TAR-FIM
+000228                DISPLAY 'PEDVALID - ERRO NO READ DE TARIFA. FS='
+000229                        WS-FS-TARIFA
+000230                PERFORM 9900-ENCERRAR-COM-ERRO
+000231                   THRU 9900-FIM-ENCERRAR-COM-ERRO
+000232             END-IF.
+000233         1100-FIM-CARREGAR-TARIFA.
+000234             EXIT.
+000235
+000236         2000-PROCESSAR.
+000237             PERFORM 2100-VALIDAR-PASSAGEM THRU 2100-FIM-VALIDAR-PASSAGEM
+000238             IF WS-REGISTRO-VALIDO
+000239                PERFORM 2200-GRAVAR-APROVADA THRU 2200-FIM-GRAVAR-APROVADA
+000240             ELSE
+000241                PERFORM 2300-GRAVAR-REJEITADA
+000242                   THRU 2300-FIM-GRAVAR-REJEITADA
+000243             END-IF
+000244             PERFORM 8000-LER-PASSAGEM THRU 8000-FIM-LER-PASSAGEM.
+000245         2000-FIM-PROCESSAR.
+000246             EXIT.
+000247
+000248         2100-VALIDAR-PASSAGEM.
+000249             SET WS-REGISTRO-VALIDO TO TRUE
+000250             MOVE PS-DATA TO WS-DATA-VALIDAR
+000251             EVALUATE TRUE
+000252                WHEN PS-TAG IS NOT NUMERIC
+000253                   MOVE 1 TO WS-MOT
+000254                WHEN PS-DATA IS NOT NUMERIC
+000255                  OR NOT WS-MES-VALIDO
+000256                  OR NOT WS-DIA-VALIDO
+000257                   MOVE 2 TO WS-MOT
+000258                WHEN PS-VALOR IS NOT NUMERIC
+000259                   MOVE 3 TO WS-MOT
+000260                WHEN PS-ISENTA
+GnuCOBOL 3.3-dev.0      sistema\work\PEDVALI Fri Nov 13 2026 18:34:23  Page 0006
+
+LINE    PG/LN  A...B............................................................
+
+000261                   MOVE 6 TO WS-MOT
+000262                WHEN OTHER
+000263                   PERFORM 2110-BUSCAR-TARIFA THRU 2110-FIM-BUSCAR-TARIFA
+000264                   EVALUATE TRUE
+000265                      WHEN WS-SEM-TARIFA
+000266                         MOVE 4 TO WS-MOT
+000267                      WHEN PS-VALOR NOT = WS-VALOR-TARIFA
+000268                         MOVE 5 TO WS-MOT
+000269                      WHEN OTHER
+000270                         MOVE 0 TO WS-MOT
+000271                   END-EVALUATE
+000272             END-EVALUATE
+000273             IF WS-MOT NOT = ZERO
+000274                SET WS-REGISTRO-INVALIDO TO TRUE
+000275             END-IF.
+000276         2100-FIM-VALIDAR-PASSAGEM.
+000277             EXIT.
+000278
+000279         2110-BUSCAR-TARIFA.
+000280             MOVE PS-PRACA     TO WS-CB-PRACA
+000281             MOVE PS-CATEGORIA TO WS-CB-CATEGORIA
+000282             SEARCH ALL WS-TF-ITEM
+000283                AT END
+000284                   SET WS-SEM-TARIFA  TO TRUE
+000285                WHEN WS-TF-CHAVE(IX-TF) = WS-CHAVE-BUSCA
+000286                   SET WS-ACHOU-TARIFA TO TRUE
+000287                   MOVE WS-TF-VALOR(IX-TF) TO WS-VALOR-TARIFA
+000288                   MOVE WS-TF-NOME(IX-TF)  TO WS-NOME-PRACA
+000289             END-SEARCH.
+000290         2110-FIM-BUSCAR-TARIFA.
+000291             EXIT.
+000292
+000293         2200-GRAVAR-APROVADA.
+000294        *    LIMPA O REGISTRO, INCLUSIVE O FILLER, E MONTA CAMPO A CAMPO
+000295             MOVE SPACES             TO REG-APROVADA
+000296             MOVE PS-TAG             TO PA-TAG
+000297             MOVE PS-PRACA           TO PA-PRACA
+000298             MOVE PS-DATA            TO PA-DATA
+000299             MOVE PS-HORA            TO PA-HORA
+000300             MOVE PS-CATEGORIA       TO PA-CATEGORIA
+000301             MOVE PS-VALOR           TO PA-VALOR
+000302             SET PA-PAGA             TO TRUE
+000303             MOVE WS-NOME-PRACA      TO PA-NOME-PRACA
+000304             MOVE PS-SENTIDO         TO PA-SENTIDO
+000305             WRITE REG-APROVADA
+000306             IF NOT WS-FS-APR-OK
+000307                DISPLAY 'PEDVALID - ERRO NO WRITE DE APROVOUT. FS='
+000308                        WS-FS-APROVADA
+000309                PERFORM 9900-ENCERRAR-COM-ERRO
+000310                   THRU 9900-FIM-ENCERRAR-COM-ERRO
+000311             END-IF
+000312             ADD 1        TO WS-QTD-APROVADAS
+GnuCOBOL 3.3-dev.0      sistema\work\PEDVALI Fri Nov 13 2026 18:34:23  Page 0007
+
+LINE    PG/LN  A...B............................................................
+
+000313             ADD PS-VALOR TO WS-VALOR-APROVADO.
+000314         2200-FIM-GRAVAR-APROVADA.
+000315             EXIT.
+000316
+000317         2300-GRAVAR-REJEITADA.
+000318             MOVE SPACES                TO REG-REJEITADA
+000319             MOVE REG-PASSAGEM          TO RJ-REGISTRO-ORIGINAL
+000320             MOVE WS-MOT                TO RJ-COD-MOTIVO
+000321             MOVE WS-DESC-MOTIVO(WS-MOT) TO RJ-DESC-MOTIVO
+000322             WRITE REG-REJEITADA
+000323             IF NOT WS-FS-REJ-OK
+000324                DISPLAY 'PEDVALID - ERRO NO WRITE DE REJEIOUT. FS='
+000325                        WS-FS-REJEITADA
+000326                PERFORM 9900-ENCERRAR-COM-ERRO
+000327                   THRU 9900-FIM-ENCERRAR-COM-ERRO
+000328             END-IF
+000329             ADD 1 TO WS-QTD-REJEITADAS
+000330             ADD 1 TO WS-QTD-POR-MOTIVO(WS-MOT).
+000331         2300-FIM-GRAVAR-REJEITADA.
+000332             EXIT.
+000333
+000334         3000-FINALIZAR.
+000335             CLOSE PASSAGEM
+000336             IF NOT WS-FS-PAS-OK
+000337                DISPLAY 'PEDVALID - ERRO NO CLOSE DE PASSIN. FS='
+000338                        WS-FS-PASSAGEM
+000339                PERFORM 9900-ENCERRAR-COM-ERRO
+000340                   THRU 9900-FIM-ENCERRAR-COM-ERRO
+000341             END-IF
+000342             CLOSE APROVADA
+000343             IF NOT WS-FS-APR-OK
+000344                DISPLAY 'PEDVALID - ERRO NO CLOSE DE APROVOUT. FS='
+000345                        WS-FS-APROVADA
+000346                PERFORM 9900-ENCERRAR-COM-ERRO
+000347                   THRU 9900-FIM-ENCERRAR-COM-ERRO
+000348             END-IF
+000349             CLOSE REJEITADA
+000350             IF NOT WS-FS-REJ-OK
+000351                DISPLAY 'PEDVALID - ERRO NO CLOSE DE REJEIOUT. FS='
+000352                        WS-FS-REJEITADA
+000353                PERFORM 9900-ENCERRAR-COM-ERRO
+000354                   THRU 9900-FIM-ENCERRAR-COM-ERRO
+000355             END-IF
+000356             DISPLAY 'PEDVALID - TARIFAS CARREGADAS : ' WS-QTD-TARIFA
+000357             DISPLAY 'PEDVALID - PASSAGENS LIDAS ...: ' WS-QTD-LIDAS
+000358             DISPLAY 'PEDVALID - GRAVADAS APROVADAS : ' WS-QTD-APROVADAS
+000359             DISPLAY 'PEDVALID -   DAS QUAIS ISENTAS: ' WS-QTD-ISENTAS
+000360             DISPLAY 'PEDVALID - GRAVADAS REJEITADAS: ' WS-QTD-REJEITADAS
+000361             PERFORM VARYING WS-MOT FROM 1 BY 1 UNTIL WS-MOT > 6
+000362                DISPLAY 'PEDVALID -   MOTIVO ' WS-MOT ' '
+000363                        WS-DESC-MOTIVO(WS-MOT) ': '
+000364                        WS-QTD-POR-MOTIVO(WS-MOT)
+GnuCOBOL 3.3-dev.0      sistema\work\PEDVALI Fri Nov 13 2026 18:34:23  Page 0008
+
+LINE    PG/LN  A...B............................................................
+
+000365             END-PERFORM
+000366             MOVE WS-VALOR-APROVADO TO WS-VALOR-EDITADO
+000367             DISPLAY 'PEDVALID - VALOR APROVADO ....: ' WS-VALOR-EDITADO
+000368        *    CONFERENCIA: LIDAS = APROVADAS + REJEITADAS
+000369             IF WS-QTD-LIDAS NOT = WS-QTD-APROVADAS + WS-QTD-REJEITADAS
+000370                DISPLAY 'PEDVALID - CONTADORES NAO FECHAM'
+000371                MOVE 16 TO RETURN-CODE
+000372             ELSE
+000373                IF WS-QTD-REJEITADAS > ZERO
+000374                   MOVE 4 TO RETURN-CODE
+000375                ELSE
+000376                   MOVE 0 TO RETURN-CODE
+000377                END-IF
+000378             END-IF.
+000379         3000-FIM-FINALIZAR.
+000380             EXIT.
+000381
+000382         8000-LER-PASSAGEM.
+000383             READ PASSAGEM
+000384                AT END
+000385                   CONTINUE
+000386                NOT AT END
+000387                   ADD 1 TO WS-QTD-LIDAS
+000388             END-READ
+000389             IF NOT WS-FS-PAS-OK AND NOT WS-FS-PAS-FIM
+000390                DISPLAY 'PEDVALID - ERRO NO READ DE PASSIN. FS='
+000391                        WS-FS-PASSAGEM
+000392                PERFORM 9900-ENCERRAR-COM-ERRO
+000393                   THRU 9900-FIM-ENCERRAR-COM-ERRO
+000394             END-IF.
+000395         8000-FIM-LER-PASSAGEM.
+000396             EXIT.
+000397
+000398         9900-ENCERRAR-COM-ERRO.
+000399             MOVE 16 TO RETURN-CODE
+000400             STOP RUN.
+000401         9900-FIM-ENCERRAR-COM-ERRO.
+000402             EXIT.
+
+
+0 warnings in compilation group
+0 errors in compilation group
