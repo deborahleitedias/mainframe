@@ -1,4 +1,4 @@
-GnuCOBOL 3.3-dev.0      sistema\work\CICBIN. Fri Nov 13 2026 18:47:22  Page 0001
+GnuCOBOL 3.3-dev.0      sistema\work\CICBIN. Mon Nov 16 2026 12:20:33  Page 0001
 
 LINE    PG/LN  A...B............................................................
 
@@ -54,7 +54,7 @@ LINE    PG/LN  A...B............................................................
 000013C            05  BN-NOME-EMISSOR        PIC X(20).
 000014C            05  BN-PRODUTO             PIC X(01).
 000015C                88  BN-CREDITO                   VALUE 'C'.
-GnuCOBOL 3.3-dev.0      sistema\work\CICBIN. Fri Nov 13 2026 18:47:22  Page 0002
+GnuCOBOL 3.3-dev.0      sistema\work\CICBIN. Mon Nov 16 2026 12:20:33  Page 0002
 
 LINE    PG/LN  A...B............................................................
 
@@ -110,7 +110,7 @@ LINE    PG/LN  A...B............................................................
 000043C       *    RESULTADO DA VERIFICACAO DO CODIGO DE SEGURANCA OU DO
 000044C       *    CRIPTOGRAMA DO CHIP (M = CONFERE, N = NAO CONFERE). O CODIGO
 000045C       *    EM SI NUNCA E GUARDADO (PCI DSS)
-GnuCOBOL 3.3-dev.0      sistema\work\CICBIN. Fri Nov 13 2026 18:47:22  Page 0003
+GnuCOBOL 3.3-dev.0      sistema\work\CICBIN. Mon Nov 16 2026 12:20:33  Page 0003
 
 LINE    PG/LN  A...B............................................................
 
@@ -166,7 +166,7 @@ LINE    PG/LN  A...B............................................................
 000075             05  WS-TX-INTERCAMBIO      PIC 9(01)V9(04).
 000076             05  WS-TX-BANDEIRA         PIC 9(01)V9(04).
 000077
-GnuCOBOL 3.3-dev.0      sistema\work\CICBIN. Fri Nov 13 2026 18:47:22  Page 0004
+GnuCOBOL 3.3-dev.0      sistema\work\CICBIN. Mon Nov 16 2026 12:20:33  Page 0004
 
 LINE    PG/LN  A...B............................................................
 
@@ -222,7 +222,7 @@ LINE    PG/LN  A...B............................................................
 000127             05  FILLER                 PIC X(12) VALUE ' INTERCAMBIO'.
 000128             05  FILLER                 PIC X(12) VALUE '    BANDEIRA'.
 000129             05  FILLER                 PIC X(12) VALUE ' CREDENCIAD.'.
-GnuCOBOL 3.3-dev.0      sistema\work\CICBIN. Fri Nov 13 2026 18:47:22  Page 0005
+GnuCOBOL 3.3-dev.0      sistema\work\CICBIN. Mon Nov 16 2026 12:20:33  Page 0005
 
 LINE    PG/LN  A...B............................................................
 
@@ -278,7 +278,7 @@ LINE    PG/LN  A...B............................................................
 000179             IF NOT WS-FS-PED-OK
 000180                DISPLAY 'CICBIN - ERRO DE OPEN PEDIDOS (PEDIDOS) FS: '
 000181                        WS-FS-PEDIDO
-GnuCOBOL 3.3-dev.0      sistema\work\CICBIN. Fri Nov 13 2026 18:47:22  Page 0006
+GnuCOBOL 3.3-dev.0      sistema\work\CICBIN. Mon Nov 16 2026 12:20:33  Page 0006
 
 LINE    PG/LN  A...B............................................................
 
@@ -334,7 +334,7 @@ LINE    PG/LN  A...B............................................................
 000231                AND PD-COMPRA
 000232                ADD 1 TO WS-QTD-COMPRAS
 000233                PERFORM 2100-IDENTIFICAR THRU 2100-FIM-IDENTIFICAR
-GnuCOBOL 3.3-dev.0      sistema\work\CICBIN. Fri Nov 13 2026 18:47:22  Page 0007
+GnuCOBOL 3.3-dev.0      sistema\work\CICBIN. Mon Nov 16 2026 12:20:33  Page 0007
 
 LINE    PG/LN  A...B............................................................
 
@@ -371,113 +371,153 @@ LINE    PG/LN  A...B............................................................
 000264             EXIT.
 000265
 000266         2200-DIVIDIR-VALOR.
-000267        *    A ESCREVER (AO VIVO): ESCOLHER AS TAXAS PELO PRODUTO DO BIN
-000268        *    (WS-BIN-PRODUTO(IX-BIN): C, D OU P) E CALCULAR, COM ROUNDED:
-000269        *    WS-VL-MDR, WS-VL-INTERCAMBIO E WS-VL-BANDEIRA. DEPOIS:
-000270        *    CREDENCIADOR = MDR - INTERCAMBIO - BANDEIRA
-000271        *    LIQUIDO = VALOR - MDR
-000272        *    E SOMAR TUDO NOS TOTAIS (WS-TT-...).
-000273             CONTINUE
-000274             .
-000275         2200-FIM-DIVIDIR-VALOR.
-000276             EXIT.
-000277
-000278         2300-IMPRIMIR.
-000279             MOVE PD-NUM-CARTAO            TO WS-CARTAO-ABERTO
-000280             PERFORM 9800-MASCARAR-CARTAO
-000281             MOVE WS-CARTAO-MASC           TO DT-CARTAO
-000282             MOVE WS-BIN-BANDEIRA(IX-BIN)  TO DT-BANDEIRA
-000283             MOVE WS-BIN-EMISSOR(IX-BIN)   TO DT-EMISSOR
-000284             MOVE WS-BIN-PRODUTO(IX-BIN)   TO DT-PRODUTO
-000285             MOVE PD-VALOR                 TO DT-VALOR
-GnuCOBOL 3.3-dev.0      sistema\work\CICBIN. Fri Nov 13 2026 18:47:22  Page 0008
+000267        *    DEFINE A TAXA CONSIDERANDO A MODALIDADE
+000268             EVALUATE WS-BIN-PRODUTO(IX-BIN)
+000269                WHEN 'C'
+000270                   MOVE 2.2000 TO WS-TX-MDR
+000271                   MOVE 1.5000 TO WS-TX-INTERCAMBIO
+000272                   MOVE 0.1000 TO WS-TX-BANDEIRA
+000273                WHEN 'D'
+000274                   MOVE 1.1000 TO WS-TX-MDR
+000275                   MOVE 0.5000 TO WS-TX-INTERCAMBIO
+000276                   MOVE 0.0500 TO WS-TX-BANDEIRA
+000277                WHEN OTHER
+000278                   MOVE 1.4000 TO WS-TX-MDR
+000279                   MOVE 0.7000 TO WS-TX-INTERCAMBIO
+000280                   MOVE 0.0500 TO WS-TX-BANDEIRA
+000281                END-EVALUATE.
+000282        *    CALCULA TAXA SOBRE O VALOR DA COMPRA
+000283             COMPUTE WS-VL-MDR ROUNDED =
+000284                PD-VALOR * WS-TX-MDR / 100
+000285
+GnuCOBOL 3.3-dev.0      sistema\work\CICBIN. Mon Nov 16 2026 12:20:33  Page 0008
 
 LINE    PG/LN  A...B............................................................
 
-000286             MOVE WS-VL-MDR                TO DT-MDR
-000287             MOVE WS-VL-INTERCAMBIO        TO DT-INTERCAMBIO
-000288             MOVE WS-VL-BANDEIRA           TO DT-TARIFA
-000289             MOVE WS-VL-CREDENCIADOR       TO DT-CREDENCIADOR
-000290             MOVE WS-VL-LIQUIDO            TO DT-LIQUIDO
-000291             WRITE REG-RELATORIO FROM WS-DETALHE AFTER ADVANCING 1 LINE
-000292             IF NOT WS-FS-REL-OK
-000293                DISPLAY 'CICBIN - ERRO DE WRITE NO RELBIN FS: '
-000294                        WS-FS-RELATORIO
-000295                PERFORM 9900-ENCERRAR-COM-ERRO
-000296             END-IF
-000297             .
-000298         2300-FIM-IMPRIMIR.
-000299             EXIT.
+000286             COMPUTE WS-VL-INTERCAMBIO ROUNDED =
+000287                PD-VALOR * WS-TX-INTERCAMBIO / 100
+000288
+000289             COMPUTE WS-VL-BANDEIRA ROUNDED =
+000290                PD-VALOR * WS-TX-BANDEIRA / 100
+000291
+000292        *    CALCULA RECEITA DO CREDENCIADOR
+000293             COMPUTE WS-VL-CREDENCIADOR ROUNDED =
+000294                WS-VL-MDR - WS-VL-INTERCAMBIO
+000295                - WS-VL-BANDEIRA
+000296
+000297        *    CALCULA LIQUIDO DA LOJA
+000298             COMPUTE WS-VL-LIQUIDO ROUNDED =
+000299                PD-VALOR - WS-VL-MDR
 000300
-000301         3000-FINALIZAR.
-000302             PERFORM 3100-RESUMO-PARTICIPANTES
-000303                THRU 3100-FIM-RESUMO-PARTICIPANTES
-000304             CLOSE PEDIDOS RELATORIO
-000305             DISPLAY 'CICBIN - PEDIDOS LIDOS ........: ' WS-QTD-LIDOS
-000306             DISPLAY 'CICBIN - COMPRAS ..............: ' WS-QTD-COMPRAS
-000307             DISPLAY 'CICBIN -   COM BIN NAO CADASTR.: ' WS-QTD-SEM-BIN
-000308             DISPLAY 'CICBIN - IGNORADOS (SAQUE/REV.): ' WS-QTD-IGNORADOS
-000309             EVALUATE TRUE
-000310                WHEN WS-CONTAS-NAO-FECHAM
-000311                   MOVE 8 TO RETURN-CODE
-000312                WHEN WS-QTD-SEM-BIN > ZERO
-000313                   MOVE 4 TO RETURN-CODE
-000314                WHEN OTHER
-000315                   MOVE 0 TO RETURN-CODE
-000316             END-EVALUATE
-000317             .
-000318         3000-FIM-FINALIZAR.
-000319             EXIT.
-000320
-000321         3100-RESUMO-PARTICIPANTES.
-000322        *    A ESCREVER (DESAFIO): IMPRIMIR NO RELATORIO O RESUMO POR
-000323        *    PARTICIPANTE (ESTABELECIMENTOS, CREDENCIADOR, EMISSORES,
-000324        *    BANDEIRAS) COM AS LINHAS WS-LINHA-TOTAL E PROVAR QUE:
-000325        *    1. VALOR = LIQUIDO + MDR
-000326        *    2. MDR = INTERCAMBIO + BANDEIRA + CREDENCIADOR
-000327        *    SE ALGUMA CONTA NAO FECHAR: SET WS-CONTAS-NAO-FECHAM TO TRUE.
-000328             CONTINUE
-000329             .
-000330         3100-FIM-RESUMO-PARTICIPANTES.
-000331             EXIT.
-000332
-000333         8000-LER-PEDIDO.
-000334             READ PEDIDOS
-000335                  AT END
-000336                     CONTINUE
-000337                  NOT AT END
-GnuCOBOL 3.3-dev.0      sistema\work\CICBIN. Fri Nov 13 2026 18:47:22  Page 0009
+000301        *    ACUMULA TOTAIS
+000302             ADD PD-VALOR TO WS-TT-VALOR
+000303             ADD WS-VL-MDR TO WS-TT-MDR
+000304             ADD WS-VL-INTERCAMBIO TO WS-TT-INTERCAMBIO
+000305             ADD WS-VL-BANDEIRA TO WS-TT-BANDEIRA
+000306             ADD WS-VL-CREDENCIADOR TO WS-TT-CREDENCIADOR
+000307             ADD WS-VL-LIQUIDO TO WS-TT-LIQUIDO
+000308
+000309             CONTINUE
+000310             .
+000311         2200-FIM-DIVIDIR-VALOR.
+000312             EXIT.
+000313
+000314         2300-IMPRIMIR.
+000315             MOVE PD-NUM-CARTAO            TO WS-CARTAO-ABERTO
+000316             PERFORM 9800-MASCARAR-CARTAO
+000317             MOVE WS-CARTAO-MASC           TO DT-CARTAO
+000318             MOVE WS-BIN-BANDEIRA(IX-BIN)  TO DT-BANDEIRA
+000319             MOVE WS-BIN-EMISSOR(IX-BIN)   TO DT-EMISSOR
+000320             MOVE WS-BIN-PRODUTO(IX-BIN)   TO DT-PRODUTO
+000321             MOVE PD-VALOR                 TO DT-VALOR
+000322             MOVE WS-VL-MDR                TO DT-MDR
+000323             MOVE WS-VL-INTERCAMBIO        TO DT-INTERCAMBIO
+000324             MOVE WS-VL-BANDEIRA           TO DT-TARIFA
+000325             MOVE WS-VL-CREDENCIADOR       TO DT-CREDENCIADOR
+000326             MOVE WS-VL-LIQUIDO            TO DT-LIQUIDO
+000327             WRITE REG-RELATORIO FROM WS-DETALHE AFTER ADVANCING 1 LINE
+000328             IF NOT WS-FS-REL-OK
+000329                DISPLAY 'CICBIN - ERRO DE WRITE NO RELBIN FS: '
+000330                        WS-FS-RELATORIO
+000331                PERFORM 9900-ENCERRAR-COM-ERRO
+000332             END-IF
+000333             .
+000334         2300-FIM-IMPRIMIR.
+000335             EXIT.
+000336
+000337         3000-FINALIZAR.
+GnuCOBOL 3.3-dev.0      sistema\work\CICBIN. Mon Nov 16 2026 12:20:33  Page 0009
 
 LINE    PG/LN  A...B............................................................
 
-000338                     ADD 1 TO WS-QTD-LIDOS
-000339             END-READ
-000340             IF NOT WS-FS-PED-OK AND NOT WS-FS-PED-FIM
-000341                DISPLAY 'CICBIN - ERRO DE READ PEDIDOS FS: ' WS-FS-PEDIDO
-000342                PERFORM 9900-ENCERRAR-COM-ERRO
-000343             END-IF
-000344             .
-000345         8000-FIM-LER-PEDIDO.
-000346             EXIT.
-000347
-000348             COPY CPMASCAR.
+000338             PERFORM 3100-RESUMO-PARTICIPANTES
+000339                THRU 3100-FIM-RESUMO-PARTICIPANTES
+000340             CLOSE PEDIDOS RELATORIO
+000341             DISPLAY 'CICBIN - PEDIDOS LIDOS ........: ' WS-QTD-LIDOS
+000342             DISPLAY 'CICBIN - COMPRAS ..............: ' WS-QTD-COMPRAS
+000343             DISPLAY 'CICBIN -   COM BIN NAO CADASTR.: ' WS-QTD-SEM-BIN
+000344             DISPLAY 'CICBIN - IGNORADOS (SAQUE/REV.): ' WS-QTD-IGNORADOS
+000345             EVALUATE TRUE
+000346                WHEN WS-CONTAS-NAO-FECHAM
+000347                   MOVE 8 TO RETURN-CODE
+000348                WHEN WS-QTD-SEM-BIN > ZERO
+000349                   MOVE 4 TO RETURN-CODE
+000350                WHEN OTHER
+000351                   MOVE 0 TO RETURN-CODE
+000352             END-EVALUATE
+000353             .
+000354         3000-FIM-FINALIZAR.
+000355             EXIT.
+000356
+000357         3100-RESUMO-PARTICIPANTES.
+000358        *    A ESCREVER (DESAFIO): IMPRIMIR NO RELATORIO O RESUMO POR
+000359        *    PARTICIPANTE (ESTABELECIMENTOS, CREDENCIADOR, EMISSORES,
+000360        *    BANDEIRAS) COM AS LINHAS WS-LINHA-TOTAL E PROVAR QUE:
+000361        *    1. VALOR = LIQUIDO + MDR
+000362        *    2. MDR = INTERCAMBIO + BANDEIRA + CREDENCIADOR
+000363        *    SE ALGUMA CONTA NAO FECHAR: SET WS-CONTAS-NAO-FECHAM TO TRUE.
+000364             CONTINUE
+000365             .
+000366         3100-FIM-RESUMO-PARTICIPANTES.
+000367             EXIT.
+000368
+000369         8000-LER-PEDIDO.
+000370             READ PEDIDOS
+000371                  AT END
+000372                     CONTINUE
+000373                  NOT AT END
+000374                     ADD 1 TO WS-QTD-LIDOS
+000375             END-READ
+000376             IF NOT WS-FS-PED-OK AND NOT WS-FS-PED-FIM
+000377                DISPLAY 'CICBIN - ERRO DE READ PEDIDOS FS: ' WS-FS-PEDIDO
+000378                PERFORM 9900-ENCERRAR-COM-ERRO
+000379             END-IF
+000380             .
+000381         8000-FIM-LER-PEDIDO.
+000382             EXIT.
+000383
+000384             COPY CPMASCAR.
 000001C       *================================================================*
 000002C       * CPMASCAR - PARAGRAFO DE MASCARAMENTO DO NUMERO DO CARTAO       *
 000003C       * REGRA DO MODULO: EXIBIR SOMENTE OS 6 PRIMEIROS E OS 4 ULTIMOS  *
 000004C       * DIGITOS. O PROGRAMA PRECISA DECLARAR WS-CARTAO-ABERTO E        *
 000005C       * WS-CARTAO-MASC (AMBOS PIC X(16)). USO: MOVE O NUMERO PARA      *
+GnuCOBOL 3.3-dev.0      sistema\work\CICBIN. Mon Nov 16 2026 12:20:33  Page 0010
+
+LINE    PG/LN  A...B............................................................
+
 000006C       * WS-CARTAO-ABERTO E PERFORM 9800-MASCARAR-CARTAO.               *
 000007C       *================================================================*
 000008C        9800-MASCARAR-CARTAO.
 000009C            MOVE WS-CARTAO-ABERTO          TO WS-CARTAO-MASC
 000010C            MOVE '******'                  TO WS-CARTAO-MASC(7:6)
 000011C            .
-000349
-000350         9900-ENCERRAR-COM-ERRO.
-000351        *    ENCERRA COM RC 16 PARA IMPEDIR OS STEPS SEGUINTES
-000352             MOVE 16 TO RETURN-CODE
-000353             STOP RUN
-000354             .
+000385
+000386         9900-ENCERRAR-COM-ERRO.
+000387        *    ENCERRA COM RC 16 PARA IMPEDIR OS STEPS SEGUINTES
+000388             MOVE 16 TO RETURN-CODE
+000389             STOP RUN
+000390             .
 
 
 0 warnings in compilation group
