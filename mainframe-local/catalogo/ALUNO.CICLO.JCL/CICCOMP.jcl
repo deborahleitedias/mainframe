@@ -4,7 +4,7 @@
 //* COMPILA E LIGA UM PROGRAMA DO CICLO DO CARTAO.
 //* TROCAR O VALOR DE PGM NO SET ABAIXO PELO NOME DO MEMBRO.
 //*--------------------------------------------------------------------
-//         SET PGM=CICCLEAR
+//         SET PGM=CICAUTOR
 //*
 //CL       EXEC IGYWCL
 //COBOL.SYSIN  DD DSN=&SYSUID..CICLO.COBOL(&PGM),DISP=SHR
