@@ -318,7 +318,28 @@
            IF CL-VALOR = LG-VALOR
               SET WS-VALOR-IGUAL TO TRUE
            ELSE
-              SET WS-VALOR-FORA  TO TRUE
+              IF CL-VALOR < LG-VALOR
+                 SET WS-VALOR-ACEITO TO TRUE
+              ELSE
+                 EVALUATE CL-MCC
+                    WHEN 7011
+                       IF CL-VALOR <= LG-VALOR * 1.15
+                          SET WS-VALOR-ACEITO TO TRUE
+                       ELSE
+                          SET WS-VALOR-FORA TO TRUE
+                       END-IF
+
+                    WHEN 5812
+                       IF CL-VALOR <= LG-VALOR * 1.20
+                          SET WS-VALOR-ACEITO TO TRUE
+                       ELSE
+                          SET WS-VALOR-FORA TO TRUE
+                       END-IF
+
+                    WHEN OTHER
+                       SET WS-VALOR-FORA TO TRUE
+                 END-EVALUATE
+              END-IF
            END-IF
            .
        2200-FIM-CONFERIR-VALOR.
