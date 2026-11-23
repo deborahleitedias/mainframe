@@ -263,6 +263,10 @@
                  PERFORM 8200-LER-APRESENTACAO 
                     THRU 8200-FIM-LER-APRESENTACAO   
               WHEN WS-CHAVE-AUT < WS-CHAVE-CLR 
+                 IF WS-AUTORIZACAO-LIVRE
+                    PERFORM 2500-SEM-APRESENTACAO
+                    THRU 2500-FIM-SEM-APRESENTACAO
+                 END-IF
                  SET WS-AUTORIZACAO-LIVRE TO TRUE 
                  PERFORM 8100-LER-AUTORIZACAO 
                     THRU 8100-FIM-LER-AUTORIZACAO
