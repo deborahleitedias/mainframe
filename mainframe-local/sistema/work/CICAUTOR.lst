@@ -1,9 +1,9 @@
-GnuCOBOL 3.3-dev.0      sistema\work\CICAUTO Thu Nov 19 2026 12:55:17  Page 0001
+GnuCOBOL 3.3-dev.0      sistema\work\CICAUTO Mon Nov 23 2026 15:58:46  Page 0001
 
 LINE    PG/LN  A...B............................................................
 
 000001        *================================================================*
-000002        * PROGRAMA : CICAUTOR (ESQUELETO DA TURMA)                       *
+000002        * PROGRAMA : CICAUTOR                                            *
 000003        * AULA     : 2 - AUTORIZACAO E CAPTURA                           *
 000004        * OBJETIVO : SIMULAR EM BATCH A AUTORIZACAO DO EMISSOR. PARA     *
 000005        *            CADA PEDIDO, NA ORDEM EM QUE CHEGOU:                *
@@ -21,30 +21,27 @@ LINE    PG/LN  A...B............................................................
 000017        * SAIDAS   : DD LOGOUT   - CPAUTLOG, FB 120                      *
 000018        *            DD CONTOUT  - CPCONTA, FB 80 (LIMITES ATUALIZADOS)  *
 000019        * RETORNO  : 0 = OK, 16 = ERRO DE ARQUIVO OU DE TABELA           *
-000020        * A ESCREVER NA AULA 2:                                          *
-000021        * 2200-DECIDIR (AO VIVO, COM A TURMA)                            *
-000022        * 2500-REVERTER (MAO NA MASSA)                                   *
-000023        *================================================================*
-000024         IDENTIFICATION DIVISION.
-000025         PROGRAM-ID. CICAUTOR.
-000026
-000027         ENVIRONMENT DIVISION.
-000028         INPUT-OUTPUT SECTION.
-000029         FILE-CONTROL.
-000030             SELECT CONTAS-ENTRADA ASSIGN TO CONTAS
-000031                    FILE STATUS IS WS-FS-CONTAS.
-000032             SELECT PEDIDOS        ASSIGN TO PEDIDOS
-000033                    FILE STATUS IS WS-FS-PEDIDO.
-000034             SELECT LOG-AUTORIZ    ASSIGN TO LOGOUT
-000035                    FILE STATUS IS WS-FS-LOG.
-000036             SELECT CONTAS-SAIDA   ASSIGN TO CONTOUT
-000037                    FILE STATUS IS WS-FS-CONTOUT.
-000038
-000039         DATA DIVISION.
-000040         FILE SECTION.
-000041         FD  CONTAS-ENTRADA
-000042             RECORDING MODE IS F.
-000043             COPY CPCONTA.
+000020        *================================================================*
+000021         IDENTIFICATION DIVISION.
+000022         PROGRAM-ID. CICAUTOR.
+000023
+000024         ENVIRONMENT DIVISION.
+000025         INPUT-OUTPUT SECTION.
+000026         FILE-CONTROL.
+000027             SELECT CONTAS-ENTRADA ASSIGN TO CONTAS
+000028                    FILE STATUS IS WS-FS-CONTAS.
+000029             SELECT PEDIDOS        ASSIGN TO PEDIDOS
+000030                    FILE STATUS IS WS-FS-PEDIDO.
+000031             SELECT LOG-AUTORIZ    ASSIGN TO LOGOUT
+000032                    FILE STATUS IS WS-FS-LOG.
+000033             SELECT CONTAS-SAIDA   ASSIGN TO CONTOUT
+000034                    FILE STATUS IS WS-FS-CONTOUT.
+000035
+000036         DATA DIVISION.
+000037         FILE SECTION.
+000038         FD  CONTAS-ENTRADA
+000039             RECORDING MODE IS F.
+000040             COPY CPCONTA.
 000001C       *================================================================*
 000002C       * CPCONTA  - CADASTRO DE CONTAS DE CARTAO DOS EMISSORES          *
 000003C       * LRECL 80, RECFM FB. ORDENADO POR NUMERO DO CARTAO.             *
@@ -54,13 +51,13 @@ LINE    PG/LN  A...B............................................................
 000007C       *================================================================*
 000008C        01  REG-CONTA.
 000009C            05  CT-NUM-CARTAO          PIC X(16).
-GnuCOBOL 3.3-dev.0      sistema\work\CICAUTO Thu Nov 19 2026 12:55:17  Page 0002
-
-LINE    PG/LN  A...B............................................................
-
 000010C            05  CT-COD-EMISSOR         PIC 9(03).
 000011C            05  CT-STATUS              PIC X(01).
 000012C                88  CT-ATIVO                     VALUE 'A'.
+GnuCOBOL 3.3-dev.0      sistema\work\CICAUTO Mon Nov 23 2026 15:58:46  Page 0002
+
+LINE    PG/LN  A...B............................................................
+
 000013C                88  CT-BLOQUEADO                 VALUE 'B'.
 000014C                88  CT-CANCELADO                 VALUE 'C'.
 000015C       *    VALIDADE NO FORMATO AAAAMM: O CARTAO VALE ATE O FIM DO MES
@@ -73,9 +70,9 @@ LINE    PG/LN  A...B............................................................
 000022C            05  CT-LIMITE-SAQUE        PIC 9(07)V99.
 000023C            05  CT-NOME-TITULAR        PIC X(20).
 000024C            05  FILLER                 PIC X(01).
-000044         FD  PEDIDOS
-000045             RECORDING MODE IS F.
-000046             COPY CPAUTPED.
+000041         FD  PEDIDOS
+000042             RECORDING MODE IS F.
+000043             COPY CPAUTPED.
 000001C       *================================================================*
 000002C       * CPAUTPED - PEDIDO DE AUTORIZACAO (LAYOUT SIMPLIFICADO,         *
 000003C       *            INSPIRADO NOS ELEMENTOS DE DADOS DA ISO 8583)       *
@@ -110,13 +107,13 @@ LINE    PG/LN  A...B............................................................
 000032C       *    DE 18 - MCC
 000033C            05  PD-MCC                 PIC 9(04).
 000034C       *    DE 22 - MODO DE ENTRADA (SIMPLIFICADO EM 2 POSICOES)
-GnuCOBOL 3.3-dev.0      sistema\work\CICAUTO Thu Nov 19 2026 12:55:17  Page 0003
-
-LINE    PG/LN  A...B............................................................
-
 000035C            05  PD-MODO-ENTRADA        PIC X(02).
 000036C                88  PD-DIGITADO                  VALUE '01'.
 000037C                88  PD-CHIP                      VALUE '05'.
+GnuCOBOL 3.3-dev.0      sistema\work\CICAUTO Mon Nov 23 2026 15:58:46  Page 0003
+
+LINE    PG/LN  A...B............................................................
+
 000038C                88  PD-APROXIMACAO               VALUE '07'.
 000039C                88  PD-COMERCIO-ELETRONICO       VALUE '81'.
 000040C                88  PD-TARJA                     VALUE '90'.
@@ -140,9 +137,9 @@ LINE    PG/LN  A...B............................................................
 000058C       *    DE 39 - NO 0120, A RESPOSTA DADA PELA BANDEIRA
 000059C            05  PD-RESPOSTA-STANDIN    PIC X(02).
 000060C            05  FILLER                 PIC X(01).
-000047         FD  LOG-AUTORIZ
-000048             RECORDING MODE IS F.
-000049             COPY CPAUTLOG.
+000044         FD  LOG-AUTORIZ
+000045             RECORDING MODE IS F.
+000046             COPY CPAUTLOG.
 000001C       *================================================================*
 000002C       * CPAUTLOG - LOG DE AUTORIZACOES (UM REGISTRO POR MENSAGEM)      *
 000003C       * LRECL 120, RECFM FB. GRAVADO PELO CICAUTOR, LIDO PELO CICCLEAR *
@@ -166,477 +163,483 @@ LINE    PG/LN  A...B............................................................
 000021C            05  LG-COD-AUTORIZACAO     PIC X(06).
 000022C            05  LG-RESPOSTA            PIC X(02).
 000023C                88  LG-APROVADA                  VALUE '00'.
-GnuCOBOL 3.3-dev.0      sistema\work\CICAUTO Thu Nov 19 2026 12:55:17  Page 0004
-
-LINE    PG/LN  A...B............................................................
-
 000024C       *    QUEM RESPONDEU: E = EMISSOR, S = BANDEIRA EM STAND-IN
 000025C            05  LG-ORIGEM              PIC X(01).
 000026C                88  LG-PELO-EMISSOR              VALUE 'E'.
+GnuCOBOL 3.3-dev.0      sistema\work\CICAUTO Mon Nov 23 2026 15:58:46  Page 0004
+
+LINE    PG/LN  A...B............................................................
+
 000027C                88  LG-EM-STAND-IN               VALUE 'S'.
 000028C       *    SITUACAO FINAL: BRANCO = VALE, R = REVERTIDA DEPOIS
 000029C            05  LG-SITUACAO            PIC X(01).
 000030C                88  LG-REVERTIDA                 VALUE 'R'.
 000031C            05  LG-DESC-RESPOSTA       PIC X(30).
 000032C            05  FILLER                 PIC X(07).
-000050         FD  CONTAS-SAIDA
-000051             RECORDING MODE IS F.
-000052         01  REG-CONTA-SAIDA            PIC X(80).
-000053
-000054         WORKING-STORAGE SECTION.
-000055         01  WS-FS-CONTAS               PIC X(02).
-000056             88  WS-FS-CON-OK                     VALUE '00'.
-000057             88  WS-FS-CON-FIM                    VALUE '10'.
-000058         01  WS-FS-PEDIDO               PIC X(02).
-000059             88  WS-FS-PED-OK                     VALUE '00'.
-000060             88  WS-FS-PED-FIM                    VALUE '10'.
-000061         01  WS-FS-LOG                  PIC X(02).
-000062             88  WS-FS-LOG-OK                     VALUE '00'.
-000063         01  WS-FS-CONTOUT              PIC X(02).
-000064             88  WS-FS-COU-OK                     VALUE '00'.
-000065
-000066        *--- CONTAS EM MEMORIA (SEARCH ALL PELO CARTAO) -----------------*
-000067        *    CADA POSICAO GUARDA O REGISTRO INTEIRO; O LIMITE DISPONIVEL
-000068        *    E ATUALIZADO NA PROPRIA TABELA E GRAVADO NO FIM
-000069         01  WS-MAX-CONTAS              PIC 9(03) VALUE 200.
-000070         01  WS-QTD-CONTAS              PIC 9(03) VALUE ZERO.
-000071         01  WS-TABELA-CONTAS.
-000072             05  WS-CT-ITEM OCCURS 200 TIMES
-000073                            ASCENDING KEY IS WS-CT-CARTAO
-000074                            INDEXED BY IX-CT.
-000075                 10  WS-CT-CARTAO       PIC X(16).
-000076                 10  WS-CT-STATUS       PIC X(01).
-000077                 10  WS-CT-VALIDADE     PIC 9(06).
-000078                 10  WS-CT-DISP         PIC S9(09)V99.
-000079                 10  WS-CT-EXTERIOR     PIC X(01).
-000080                 10  WS-CT-SAQUE        PIC 9(07)V99.
-000081                 10  WS-CT-REGISTRO     PIC X(80).
-000082
-000083         01  WS-DISP-SAIDA              PIC S9(09)V99
-000084                                        SIGN IS LEADING SEPARATE.
-000085         01  WS-DISP-SAIDA-X REDEFINES WS-DISP-SAIDA
-000086                                        PIC X(12).
-000087         01  WS-ACHOU-CONTA             PIC X(01).
-000088             88  WS-CONTA-ENCONTRADA              VALUE 'S'.
-000089             88  WS-CONTA-NAO-ENCONTRADA          VALUE 'N'.
-000090
-000091        *--- AUTORIZACOES APROVADAS (PARA ACHAR A ORIGINAL NA REVERSAO) -*
-000092         01  WS-MAX-LOG                 PIC 9(04) VALUE 2000.
-GnuCOBOL 3.3-dev.0      sistema\work\CICAUTO Thu Nov 19 2026 12:55:17  Page 0005
+000047         FD  CONTAS-SAIDA
+000048             RECORDING MODE IS F.
+000049         01  REG-CONTA-SAIDA            PIC X(80).
+000050
+000051         WORKING-STORAGE SECTION.
+000052         01  WS-FS-CONTAS               PIC X(02).
+000053             88  WS-FS-CON-OK                     VALUE '00'.
+000054             88  WS-FS-CON-FIM                    VALUE '10'.
+000055         01  WS-FS-PEDIDO               PIC X(02).
+000056             88  WS-FS-PED-OK                     VALUE '00'.
+000057             88  WS-FS-PED-FIM                    VALUE '10'.
+000058         01  WS-FS-LOG                  PIC X(02).
+000059             88  WS-FS-LOG-OK                     VALUE '00'.
+000060         01  WS-FS-CONTOUT              PIC X(02).
+000061             88  WS-FS-COU-OK                     VALUE '00'.
+000062
+000063        *--- CONTAS EM MEMORIA (SEARCH ALL PELO CARTAO) -----------------*
+000064        *    CADA POSICAO GUARDA O REGISTRO INTEIRO; O LIMITE DISPONIVEL
+000065        *    E ATUALIZADO NA PROPRIA TABELA E GRAVADO NO FIM
+000066         01  WS-MAX-CONTAS              PIC 9(03) VALUE 200.
+000067         01  WS-QTD-CONTAS              PIC 9(03) VALUE ZERO.
+000068         01  WS-TABELA-CONTAS.
+000069             05  WS-CT-ITEM OCCURS 200 TIMES
+000070                            ASCENDING KEY IS WS-CT-CARTAO
+000071                            INDEXED BY IX-CT.
+000072                 10  WS-CT-CARTAO       PIC X(16).
+000073                 10  WS-CT-STATUS       PIC X(01).
+000074                 10  WS-CT-VALIDADE     PIC 9(06).
+000075                 10  WS-CT-DISP         PIC S9(09)V99.
+000076                 10  WS-CT-EXTERIOR     PIC X(01).
+000077                 10  WS-CT-SAQUE        PIC 9(07)V99.
+000078                 10  WS-CT-REGISTRO     PIC X(80).
+000079
+000080         01  WS-DISP-SAIDA              PIC S9(09)V99
+000081                                        SIGN IS LEADING SEPARATE.
+000082         01  WS-DISP-SAIDA-X REDEFINES WS-DISP-SAIDA
+000083                                        PIC X(12).
+000084         01  WS-ACHOU-CONTA             PIC X(01).
+000085             88  WS-CONTA-ENCONTRADA              VALUE 'S'.
+000086             88  WS-CONTA-NAO-ENCONTRADA          VALUE 'N'.
+000087
+000088        *--- AUTORIZACOES APROVADAS (PARA ACHAR A ORIGINAL NA REVERSAO) -*
+000089         01  WS-MAX-LOG                 PIC 9(04) VALUE 2000.
+000090         01  WS-QTD-LOG                 PIC 9(04) VALUE ZERO.
+000091         01  WS-TABELA-LOG.
+000092             05  WS-LOG-ITEM OCCURS 2000 TIMES INDEXED BY IX-LOG.
+GnuCOBOL 3.3-dev.0      sistema\work\CICAUTO Mon Nov 23 2026 15:58:46  Page 0005
 
 LINE    PG/LN  A...B............................................................
 
-000093         01  WS-QTD-LOG                 PIC 9(04) VALUE ZERO.
-000094         01  WS-TABELA-LOG.
-000095             05  WS-LOG-ITEM OCCURS 2000 TIMES INDEXED BY IX-LOG.
-000096                 10  WS-LG-REGISTRO     PIC X(120).
-000097         01  WS-TABELA-APROVADAS.
-000098             05  WS-AP-ITEM OCCURS 2000 TIMES INDEXED BY IX-AP.
-000099                 10  WS-AP-CARTAO       PIC X(16).
-000100                 10  WS-AP-CODIGO       PIC X(06).
-000101                 10  WS-AP-VALOR        PIC 9(09)V99.
-000102                 10  WS-AP-POSICAO-LOG  PIC 9(04).
-000103                 10  WS-AP-REVERTIDA    PIC X(01).
-000104         01  WS-QTD-AP                  PIC 9(04) VALUE ZERO.
-000105         01  WS-ACHOU-ORIGINAL          PIC X(01).
-000106             88  WS-ORIGINAL-ENCONTRADA           VALUE 'S'.
-000107             88  WS-ORIGINAL-NAO-ENCONTRADA       VALUE 'N'.
-000108
-000109        *--- GERACAO DO CODIGO DE AUTORIZACAO (DE 38) -------------------*
-000110         01  WS-SEQ-AUTORIZACAO         PIC 9(05) VALUE ZERO.
-000111         01  WS-COD-GERADO.
-000112             05  FILLER                 PIC X(01) VALUE 'P'.
-000113             05  WS-COD-SEQ             PIC 9(05).
-000114
-000115         01  WS-CONTADORES.
-000116             05  WS-QTD-LIDOS           PIC 9(07) VALUE ZERO.
-000117             05  WS-QTD-APROVADAS       PIC 9(07) VALUE ZERO.
-000118             05  WS-QTD-NEGADAS         PIC 9(07) VALUE ZERO.
-000119             05  WS-QTD-STANDIN         PIC 9(07) VALUE ZERO.
-000120             05  WS-QTD-REVERTIDAS      PIC 9(07) VALUE ZERO.
-000121             05  WS-QTD-REV-SEM-ORIG    PIC 9(07) VALUE ZERO.
-000122             05  WS-QTD-OUTROS          PIC 9(07) VALUE ZERO.
-000123         01  WS-QTD-POR-CODIGO.
-000124             05  WS-QTD-05              PIC 9(07) VALUE ZERO.
-000125             05  WS-QTD-14              PIC 9(07) VALUE ZERO.
-000126             05  WS-QTD-51              PIC 9(07) VALUE ZERO.
-000127             05  WS-QTD-54              PIC 9(07) VALUE ZERO.
-000128             05  WS-QTD-55              PIC 9(07) VALUE ZERO.
-000129             05  WS-QTD-57              PIC 9(07) VALUE ZERO.
-000130             05  WS-QTD-61              PIC 9(07) VALUE ZERO.
-000131
-000132         PROCEDURE DIVISION.
-000133         0000-PRINCIPAL.
-000134             PERFORM 1000-INICIALIZAR THRU 1000-FIM-INICIALIZAR
-000135             PERFORM 2000-PROCESSAR   THRU 2000-FIM-PROCESSAR
-000136                UNTIL WS-FS-PED-FIM
-000137             PERFORM 3000-FINALIZAR   THRU 3000-FIM-FINALIZAR
-000138             STOP RUN.
-000139
-000140         1000-INICIALIZAR.
-000141
-000142             OPEN INPUT CONTAS-ENTRADA
-000143             IF NOT WS-FS-CON-OK
-000144                DISPLAY 'CICAUTOR - ERRO DE OPEN CONTAS FS: ' WS-FS-CONTAS
-GnuCOBOL 3.3-dev.0      sistema\work\CICAUTO Thu Nov 19 2026 12:55:17  Page 0006
+000093                 10  WS-LG-REGISTRO     PIC X(120).
+000094         01  WS-TABELA-APROVADAS.
+000095             05  WS-AP-ITEM OCCURS 2000 TIMES INDEXED BY IX-AP.
+000096                 10  WS-AP-CARTAO       PIC X(16).
+000097                 10  WS-AP-CODIGO       PIC X(06).
+000098                 10  WS-AP-VALOR        PIC 9(09)V99.
+000099                 10  WS-AP-POSICAO-LOG  PIC 9(04).
+000100                 10  WS-AP-REVERTIDA    PIC X(01).
+000101         01  WS-QTD-AP                  PIC 9(04) VALUE ZERO.
+000102         01  WS-ACHOU-ORIGINAL          PIC X(01).
+000103             88  WS-ORIGINAL-ENCONTRADA           VALUE 'S'.
+000104             88  WS-ORIGINAL-NAO-ENCONTRADA       VALUE 'N'.
+000105
+000106        *--- GERACAO DO CODIGO DE AUTORIZACAO (DE 38) -------------------*
+000107         01  WS-SEQ-AUTORIZACAO         PIC 9(05) VALUE ZERO.
+000108         01  WS-COD-GERADO.
+000109             05  FILLER                 PIC X(01) VALUE 'P'.
+000110             05  WS-COD-SEQ             PIC 9(05).
+000111
+000112         01  WS-CONTADORES.
+000113             05  WS-QTD-LIDOS           PIC 9(07) VALUE ZERO.
+000114             05  WS-QTD-APROVADAS       PIC 9(07) VALUE ZERO.
+000115             05  WS-QTD-NEGADAS         PIC 9(07) VALUE ZERO.
+000116             05  WS-QTD-STANDIN         PIC 9(07) VALUE ZERO.
+000117             05  WS-QTD-REVERTIDAS      PIC 9(07) VALUE ZERO.
+000118             05  WS-QTD-REV-SEM-ORIG    PIC 9(07) VALUE ZERO.
+000119             05  WS-QTD-OUTROS          PIC 9(07) VALUE ZERO.
+000120         01  WS-QTD-POR-CODIGO.
+000121             05  WS-QTD-05              PIC 9(07) VALUE ZERO.
+000122             05  WS-QTD-14              PIC 9(07) VALUE ZERO.
+000123             05  WS-QTD-51              PIC 9(07) VALUE ZERO.
+000124             05  WS-QTD-54              PIC 9(07) VALUE ZERO.
+000125             05  WS-QTD-55              PIC 9(07) VALUE ZERO.
+000126             05  WS-QTD-57              PIC 9(07) VALUE ZERO.
+000127             05  WS-QTD-61              PIC 9(07) VALUE ZERO.
+000128
+000129         PROCEDURE DIVISION.
+000130         0000-PRINCIPAL.
+000131             PERFORM 1000-INICIALIZAR THRU 1000-FIM-INICIALIZAR
+000132             PERFORM 2000-PROCESSAR   THRU 2000-FIM-PROCESSAR
+000133                UNTIL WS-FS-PED-FIM
+000134             PERFORM 3000-FINALIZAR   THRU 3000-FIM-FINALIZAR
+000135             STOP RUN.
+000136
+000137         1000-INICIALIZAR.
+000138
+000139             OPEN INPUT CONTAS-ENTRADA
+000140             IF NOT WS-FS-CON-OK
+000141                DISPLAY 'CICAUTOR - ERRO DE OPEN CONTAS FS: ' WS-FS-CONTAS
+000142                PERFORM 9900-ENCERRAR-COM-ERRO
+000143             END-IF
+000144             OPEN INPUT PEDIDOS
+GnuCOBOL 3.3-dev.0      sistema\work\CICAUTO Mon Nov 23 2026 15:58:46  Page 0006
 
 LINE    PG/LN  A...B............................................................
 
-000145                PERFORM 9900-ENCERRAR-COM-ERRO
-000146             END-IF
-000147             OPEN INPUT PEDIDOS
-000148             IF NOT WS-FS-PED-OK
-000149                DISPLAY 'CICAUTOR - ERRO DE OPEN PEDIDOS FS: '
-000150                        WS-FS-PEDIDO
-000151                PERFORM 9900-ENCERRAR-COM-ERRO
-000152             END-IF
-000153             OPEN OUTPUT LOG-AUTORIZ
-000154             IF NOT WS-FS-LOG-OK
-000155                DISPLAY 'CICAUTOR - ERRO DE OPEN LOGOUT FS: ' WS-FS-LOG
-000156                PERFORM 9900-ENCERRAR-COM-ERRO
-000157             END-IF
-000158             OPEN OUTPUT CONTAS-SAIDA
-000159             IF NOT WS-FS-COU-OK
-000160                DISPLAY 'CICAUTOR - ERRO DE OPEN CONTOUT FS: '
-000161                        WS-FS-CONTOUT
-000162                PERFORM 9900-ENCERRAR-COM-ERRO
-000163             END-IF
-000164
-000165             PERFORM 1100-CARREGAR-CONTAS THRU 1100-FIM-CARREGAR-CONTAS
-000166             PERFORM 8000-LER-PEDIDO      THRU 8000-FIM-LER-PEDIDO
-000167             .
-000168         1000-FIM-INICIALIZAR.
-000169             EXIT.
-000170
-000171         1100-CARREGAR-CONTAS.
-000172             PERFORM VARYING IX-CT FROM 1 BY 1 UNTIL IX-CT > WS-MAX-CONTAS
-000173                MOVE HIGH-VALUES TO WS-CT-CARTAO(IX-CT)
-000174             END-PERFORM
-000175             READ CONTAS-ENTRADA
-000176             PERFORM UNTIL WS-FS-CON-FIM
-000177                ADD 1 TO WS-QTD-CONTAS
-000178                IF WS-QTD-CONTAS > WS-MAX-CONTAS
-000179                   DISPLAY 'CICAUTOR - MAIS CONTAS QUE O LIMITE DA TABELA'
-000180                   PERFORM 9900-ENCERRAR-COM-ERRO
-000181                END-IF
-000182                MOVE CT-NUM-CARTAO    TO WS-CT-CARTAO(WS-QTD-CONTAS)
-000183                MOVE CT-STATUS        TO WS-CT-STATUS(WS-QTD-CONTAS)
-000184                MOVE CT-VALIDADE      TO WS-CT-VALIDADE(WS-QTD-CONTAS)
-000185                MOVE CT-LIMITE-DISP   TO WS-CT-DISP(WS-QTD-CONTAS)
-000186                MOVE CT-INTERNACIONAL TO WS-CT-EXTERIOR(WS-QTD-CONTAS)
-000187                MOVE CT-LIMITE-SAQUE  TO WS-CT-SAQUE(WS-QTD-CONTAS)
-000188                MOVE REG-CONTA        TO WS-CT-REGISTRO(WS-QTD-CONTAS)
-000189                READ CONTAS-ENTRADA
-000190             END-PERFORM
-000191             CLOSE CONTAS-ENTRADA
-000192             DISPLAY 'CICAUTOR - CONTAS CARREGADAS ..: ' WS-QTD-CONTAS
-000193             .
-000194         1100-FIM-CARREGAR-CONTAS.
-000195             EXIT.
-000196
-GnuCOBOL 3.3-dev.0      sistema\work\CICAUTO Thu Nov 19 2026 12:55:17  Page 0007
+000145             IF NOT WS-FS-PED-OK
+000146                DISPLAY 'CICAUTOR - ERRO DE OPEN PEDIDOS FS: '
+000147                        WS-FS-PEDIDO
+000148                PERFORM 9900-ENCERRAR-COM-ERRO
+000149             END-IF
+000150             OPEN OUTPUT LOG-AUTORIZ
+000151             IF NOT WS-FS-LOG-OK
+000152                DISPLAY 'CICAUTOR - ERRO DE OPEN LOGOUT FS: ' WS-FS-LOG
+000153                PERFORM 9900-ENCERRAR-COM-ERRO
+000154             END-IF
+000155             OPEN OUTPUT CONTAS-SAIDA
+000156             IF NOT WS-FS-COU-OK
+000157                DISPLAY 'CICAUTOR - ERRO DE OPEN CONTOUT FS: '
+000158                        WS-FS-CONTOUT
+000159                PERFORM 9900-ENCERRAR-COM-ERRO
+000160             END-IF
+000161
+000162             PERFORM 1100-CARREGAR-CONTAS THRU 1100-FIM-CARREGAR-CONTAS
+000163             PERFORM 8000-LER-PEDIDO      THRU 8000-FIM-LER-PEDIDO
+000164             .
+000165         1000-FIM-INICIALIZAR.
+000166             EXIT.
+000167
+000168         1100-CARREGAR-CONTAS.
+000169             PERFORM VARYING IX-CT FROM 1 BY 1 UNTIL IX-CT > WS-MAX-CONTAS
+000170                MOVE HIGH-VALUES TO WS-CT-CARTAO(IX-CT)
+000171             END-PERFORM
+000172             READ CONTAS-ENTRADA
+000173             PERFORM UNTIL WS-FS-CON-FIM
+000174                ADD 1 TO WS-QTD-CONTAS
+000175                IF WS-QTD-CONTAS > WS-MAX-CONTAS
+000176                   DISPLAY 'CICAUTOR - MAIS CONTAS QUE O LIMITE DA TABELA'
+000177                   PERFORM 9900-ENCERRAR-COM-ERRO
+000178                END-IF
+000179                MOVE CT-NUM-CARTAO    TO WS-CT-CARTAO(WS-QTD-CONTAS)
+000180                MOVE CT-STATUS        TO WS-CT-STATUS(WS-QTD-CONTAS)
+000181                MOVE CT-VALIDADE      TO WS-CT-VALIDADE(WS-QTD-CONTAS)
+000182                MOVE CT-LIMITE-DISP   TO WS-CT-DISP(WS-QTD-CONTAS)
+000183                MOVE CT-INTERNACIONAL TO WS-CT-EXTERIOR(WS-QTD-CONTAS)
+000184                MOVE CT-LIMITE-SAQUE  TO WS-CT-SAQUE(WS-QTD-CONTAS)
+000185                MOVE REG-CONTA        TO WS-CT-REGISTRO(WS-QTD-CONTAS)
+000186                READ CONTAS-ENTRADA
+000187             END-PERFORM
+000188             CLOSE CONTAS-ENTRADA
+000189             DISPLAY 'CICAUTOR - CONTAS CARREGADAS ..: ' WS-QTD-CONTAS
+000190             .
+000191         1100-FIM-CARREGAR-CONTAS.
+000192             EXIT.
+000193
+000194         2000-PROCESSAR.
+000195        *    PREPARA O REGISTRO DE LOG COM OS DADOS DO PEDIDO
+000196             MOVE SPACES               TO REG-LOG-AUTORIZACAO
+GnuCOBOL 3.3-dev.0      sistema\work\CICAUTO Mon Nov 23 2026 15:58:46  Page 0007
 
 LINE    PG/LN  A...B............................................................
 
-000197         2000-PROCESSAR.
-000198        *    PREPARA O REGISTRO DE LOG COM OS DADOS DO PEDIDO
-000199             MOVE SPACES               TO REG-LOG-AUTORIZACAO
-000200             MOVE PD-MTI               TO LG-MTI-PEDIDO
-000201             MOVE PD-COD-PROCESSAMENTO TO LG-COD-PROCESSAMENTO
-000202             MOVE PD-NUM-CARTAO        TO LG-NUM-CARTAO
-000203             MOVE PD-VALOR             TO LG-VALOR
-000204             MOVE PD-DATA              TO LG-DATA
-000205             MOVE PD-HORA              TO LG-HORA
-000206             MOVE PD-STAN              TO LG-STAN
-000207             MOVE PD-MCC               TO LG-MCC
-000208             MOVE PD-MODO-ENTRADA      TO LG-MODO-ENTRADA
-000209             MOVE PD-PAIS              TO LG-PAIS
-000210             MOVE PD-ECI               TO LG-ECI
-000211             MOVE PD-RECORRENTE        TO LG-RECORRENTE
-000212             SET LG-PELO-EMISSOR       TO TRUE
-000213
-000214             PERFORM 2100-LOCALIZAR-CONTA THRU 2100-FIM-LOCALIZAR-CONTA
-000215
-000216             EVALUATE TRUE
-000217                WHEN PD-PEDIDO-DUPLA OR PD-PEDIDO-UNICA
-000218                   PERFORM 2200-DECIDIR      THRU 2200-FIM-DECIDIR
-000219                WHEN PD-AVISO-STANDIN
-000220                   PERFORM 2400-AVISO-STANDIN THRU 2400-FIM-AVISO-STANDIN
-000221                WHEN PD-REVERSAO OR PD-AVISO-REVERSAO
-000222                   PERFORM 2500-REVERTER     THRU 2500-FIM-REVERTER
-000223                WHEN OTHER
-000224                   ADD 1 TO WS-QTD-OUTROS
-000225                   MOVE '12'                 TO LG-RESPOSTA
-000226                   MOVE 'MENSAGEM NAO TRATADA' TO LG-DESC-RESPOSTA
-000227             END-EVALUATE
-000228
-000229             PERFORM 7000-GUARDAR-LOG THRU 7000-FIM-GUARDAR-LOG
-000230             PERFORM 8000-LER-PEDIDO  THRU 8000-FIM-LER-PEDIDO
-000231             .
-000232         2000-FIM-PROCESSAR.
-000233             EXIT.
-000234
-000235         2100-LOCALIZAR-CONTA.
-000236             SEARCH ALL WS-CT-ITEM
-000237                AT END
-000238                   SET WS-CONTA-NAO-ENCONTRADA TO TRUE
-000239                WHEN WS-CT-CARTAO(IX-CT) = PD-NUM-CARTAO
-000240                   SET WS-CONTA-ENCONTRADA     TO TRUE
-000241             END-SEARCH
-000242             .
-000243         2100-FIM-LOCALIZAR-CONTA.
-000244             EXIT.
-000245
-000246         2200-DECIDIR.
-000247        *    RESPOSTA: 0110 PARA O 0100 E 0210 PARA O 0200
-000248             IF PD-PEDIDO-DUPLA
-GnuCOBOL 3.3-dev.0      sistema\work\CICAUTO Thu Nov 19 2026 12:55:17  Page 0008
+000197             MOVE PD-MTI               TO LG-MTI-PEDIDO
+000198             MOVE PD-COD-PROCESSAMENTO TO LG-COD-PROCESSAMENTO
+000199             MOVE PD-NUM-CARTAO        TO LG-NUM-CARTAO
+000200             MOVE PD-VALOR             TO LG-VALOR
+000201             MOVE PD-DATA              TO LG-DATA
+000202             MOVE PD-HORA              TO LG-HORA
+000203             MOVE PD-STAN              TO LG-STAN
+000204             MOVE PD-MCC               TO LG-MCC
+000205             MOVE PD-MODO-ENTRADA      TO LG-MODO-ENTRADA
+000206             MOVE PD-PAIS              TO LG-PAIS
+000207             MOVE PD-ECI               TO LG-ECI
+000208             MOVE PD-RECORRENTE        TO LG-RECORRENTE
+000209             SET LG-PELO-EMISSOR       TO TRUE
+000210
+000211             PERFORM 2100-LOCALIZAR-CONTA THRU 2100-FIM-LOCALIZAR-CONTA
+000212
+000213             EVALUATE TRUE
+000214                WHEN PD-PEDIDO-DUPLA OR PD-PEDIDO-UNICA
+000215                   PERFORM 2200-DECIDIR      THRU 2200-FIM-DECIDIR
+000216                WHEN PD-AVISO-STANDIN
+000217                   PERFORM 2400-AVISO-STANDIN THRU 2400-FIM-AVISO-STANDIN
+000218                WHEN PD-REVERSAO OR PD-AVISO-REVERSAO
+000219                   PERFORM 2500-REVERTER     THRU 2500-FIM-REVERTER
+000220                WHEN OTHER
+000221                   ADD 1 TO WS-QTD-OUTROS
+000222                   MOVE '12'                 TO LG-RESPOSTA
+000223                   MOVE 'MENSAGEM NAO TRATADA' TO LG-DESC-RESPOSTA
+000224             END-EVALUATE
+000225
+000226             PERFORM 7000-GUARDAR-LOG THRU 7000-FIM-GUARDAR-LOG
+000227             PERFORM 8000-LER-PEDIDO  THRU 8000-FIM-LER-PEDIDO
+000228             .
+000229         2000-FIM-PROCESSAR.
+000230             EXIT.
+000231
+000232         2100-LOCALIZAR-CONTA.
+000233             SEARCH ALL WS-CT-ITEM
+000234                AT END
+000235                   SET WS-CONTA-NAO-ENCONTRADA TO TRUE
+000236                WHEN WS-CT-CARTAO(IX-CT) = PD-NUM-CARTAO
+000237                   SET WS-CONTA-ENCONTRADA     TO TRUE
+000238             END-SEARCH
+000239             .
+000240         2100-FIM-LOCALIZAR-CONTA.
+000241             EXIT.
+000242
+000243         2200-DECIDIR.
+000244        *    RESPOSTA: 0110 PARA O 0100 E 0210 PARA O 0200
+000245             IF PD-PEDIDO-DUPLA
+000246                MOVE '0110' TO LG-MTI-RESPOSTA
+000247             ELSE
+000248                MOVE '0210' TO LG-MTI-RESPOSTA
+GnuCOBOL 3.3-dev.0      sistema\work\CICAUTO Mon Nov 23 2026 15:58:46  Page 0008
 
 LINE    PG/LN  A...B............................................................
 
-000249                MOVE '0110' TO LG-MTI-RESPOSTA
-000250             ELSE
-000251                MOVE '0210' TO LG-MTI-RESPOSTA
-000252             END-IF
-000253
-000254             EVALUATE TRUE
-000255                WHEN WS-CONTA-NAO-ENCONTRADA
-000256                   MOVE '14' TO LG-RESPOSTA
-000257                   MOVE 'CARTAO INEXISTENTE'
-000258                     TO LG-DESC-RESPOSTA
-000259                   ADD 1 TO WS-QTD-14
-000260
+000249             END-IF
+000250        *    AS REGRAS DO EMISSOR, NA ORDEM. A PRIMEIRA QUE FALHA DECIDE
+000251             EVALUATE TRUE
+000252                WHEN WS-CONTA-NAO-ENCONTRADA
+000253                   MOVE '14' TO LG-RESPOSTA
+000254                   MOVE 'CARTAO INEXISTENTE' TO LG-DESC-RESPOSTA
+000255                   ADD 1 TO WS-QTD-14
+000256                WHEN WS-CT-STATUS(IX-CT) NOT = 'A'
+000257                   MOVE '05' TO LG-RESPOSTA
+000258                   MOVE 'CARTAO BLOQUEADO OU CANCELADO'
+000259                                             TO LG-DESC-RESPOSTA
+000260                   ADD 1 TO WS-QTD-05
 000261                WHEN WS-CT-VALIDADE(IX-CT) < PD-ANO-MES
 000262                   MOVE '54' TO LG-RESPOSTA
-000263                   MOVE 'CARTAO VENCIDO'
-000264                     TO LG-DESC-RESPOSTA
-000265                   ADD 1 TO WS-QTD-54
-000266
-000267                WHEN WS-CT-STATUS(IX-CT) NOT = 'A'
-000268                   MOVE '05' TO LG-RESPOSTA
-000269                   MOVE 'CARTAO BLOQUEADO'
-000270                     TO LG-DESC-RESPOSTA
-000271                   ADD 1 TO WS-QTD-05
-000272
-000273                WHEN PD-CODIGO-NAO-CONFERE
-000274                   MOVE '05' TO LG-RESPOSTA
-000275                   MOVE 'CODIGO DE SEGURANCA NAO CONFERE'
-000276                     TO LG-DESC-RESPOSTA
-000277                   ADD 1 TO WS-QTD-05
-000278
-000279                WHEN PD-SENHA-NAO-CONFERE
-000280                   MOVE '55' TO LG-RESPOSTA
-000281                   MOVE 'SENHA NAO CONFERE'
-000282                     TO LG-DESC-RESPOSTA
-000283                   ADD 1 TO WS-QTD-55
-000284
-000285                WHEN WS-CT-EXTERIOR(IX-CT) NOT = 'S'
-000286                     AND NOT PD-NACIONAL
-000287                   MOVE '57' TO LG-RESPOSTA
-000288                   MOVE 'EXTERIOR SEM HABILITACAO'
-000289                     TO LG-DESC-RESPOSTA
-000290                   ADD 1 TO WS-QTD-57
-000291
-000292                WHEN PD-SAQUE AND
-000293                     PD-VALOR > WS-CT-SAQUE(IX-CT)
-000294                   MOVE '61' TO LG-RESPOSTA
-000295                   MOVE 'SAQUE ACIMA DO LIMITE DE SAQUE'
-000296                     TO LG-DESC-RESPOSTA
-000297                   ADD 1 TO WS-QTD-61
-000298
-000299                WHEN PD-VALOR > WS-CT-DISP(IX-CT)
-000300                   MOVE '51' TO LG-RESPOSTA
-GnuCOBOL 3.3-dev.0      sistema\work\CICAUTO Thu Nov 19 2026 12:55:17  Page 0009
+000263                   MOVE 'CARTAO VENCIDO'     TO LG-DESC-RESPOSTA
+000264                   ADD 1 TO WS-QTD-54
+000265                WHEN PD-CODIGO-NAO-CONFERE
+000266                   MOVE '05' TO LG-RESPOSTA
+000267                   MOVE 'CODIGO DE SEGURANCA NAO CONFERE'
+000268                                             TO LG-DESC-RESPOSTA
+000269                   ADD 1 TO WS-QTD-05
+000270                WHEN PD-SENHA-NAO-CONFERE
+000271                   MOVE '55' TO LG-RESPOSTA
+000272                   MOVE 'SENHA INCORRETA'    TO LG-DESC-RESPOSTA
+000273                   ADD 1 TO WS-QTD-55
+000274                WHEN NOT PD-NACIONAL
+000275                 AND WS-CT-EXTERIOR(IX-CT) NOT = 'S'
+000276                   MOVE '57' TO LG-RESPOSTA
+000277                   MOVE 'USO NO EXTERIOR NAO HABILITADO'
+000278                                             TO LG-DESC-RESPOSTA
+000279                   ADD 1 TO WS-QTD-57
+000280                WHEN PD-SAQUE AND PD-VALOR > WS-CT-SAQUE(IX-CT)
+000281                   MOVE '61' TO LG-RESPOSTA
+000282                   MOVE 'ACIMA DO LIMITE DE SAQUE'
+000283                                             TO LG-DESC-RESPOSTA
+000284                   ADD 1 TO WS-QTD-61
+000285                WHEN PD-VALOR > WS-CT-DISP(IX-CT)
+000286                   MOVE '51' TO LG-RESPOSTA
+000287                   MOVE 'LIMITE OU SALDO INSUFICIENTE'
+000288                                             TO LG-DESC-RESPOSTA
+000289                   ADD 1 TO WS-QTD-51
+000290                WHEN OTHER
+000291                   PERFORM 2300-APROVAR THRU 2300-FIM-APROVAR
+000292             END-EVALUATE
+000293             IF NOT LG-APROVADA
+000294                ADD 1 TO WS-QTD-NEGADAS
+000295             END-IF
+000296             .
+000297         2200-FIM-DECIDIR.
+000298             EXIT.
+000299
+000300         2300-APROVAR.
+GnuCOBOL 3.3-dev.0      sistema\work\CICAUTO Mon Nov 23 2026 15:58:46  Page 0009
 
 LINE    PG/LN  A...B............................................................
 
-000301                   MOVE 'VALOR ACIMA DO DISPONIVEL'
-000302                     TO LG-DESC-RESPOSTA
-000303                   ADD 1 TO WS-QTD-51
-000304
-000305                WHEN OTHER
-000306                   PERFORM 2300-APROVAR
-000307                     THRU 2300-FIM-APROVAR
-000308             END-EVALUATE
-000309
-000310             IF NOT LG-APROVADA
-000311                ADD 1 TO WS-QTD-NEGADAS
-000312             END-IF
-000313             .
-000314         2200-FIM-DECIDIR.
-000315             EXIT.
-000316
-000317         2300-APROVAR.
-000318             ADD 1                     TO WS-SEQ-AUTORIZACAO
-000319             MOVE WS-SEQ-AUTORIZACAO   TO WS-COD-SEQ
-000320             MOVE WS-COD-GERADO        TO LG-COD-AUTORIZACAO
-000321             MOVE '00'                 TO LG-RESPOSTA
-000322             MOVE 'APROVADA'           TO LG-DESC-RESPOSTA
-000323             SUBTRACT PD-VALOR       FROM WS-CT-DISP(IX-CT)
-000324             ADD 1                     TO WS-QTD-APROVADAS
-000325             PERFORM 2350-REGISTRAR-APROVADA
-000326                THRU 2350-FIM-REGISTRAR-APROVADA
-000327             .
-000328         2300-FIM-APROVAR.
-000329             EXIT.
-000330
-000331         2350-REGISTRAR-APROVADA.
-000332        *    GUARDA A APROVADA PARA UMA EVENTUAL REVERSAO. A POSICAO NO
-000333        *    LOG E A PROXIMA, PORQUE O LOG DESTE PEDIDO AINDA VAI SER
-000334        *    GUARDADO NO 7000
-000335             ADD 1 TO WS-QTD-AP
-000336             IF WS-QTD-AP > WS-MAX-LOG
-000337                DISPLAY 'CICAUTOR - MAIS APROVADAS QUE O LIMITE'
-000338                PERFORM 9900-ENCERRAR-COM-ERRO
-000339             END-IF
-000340             MOVE PD-NUM-CARTAO      TO WS-AP-CARTAO(WS-QTD-AP)
-000341             MOVE LG-COD-AUTORIZACAO TO WS-AP-CODIGO(WS-QTD-AP)
-000342             MOVE PD-VALOR           TO WS-AP-VALOR(WS-QTD-AP)
-000343             COMPUTE WS-AP-POSICAO-LOG(WS-QTD-AP) = WS-QTD-LOG + 1
-000344             MOVE 'N'                TO WS-AP-REVERTIDA(WS-QTD-AP)
-000345             .
-000346         2350-FIM-REGISTRAR-APROVADA.
-000347             EXIT.
-000348
-000349         2400-AVISO-STANDIN.
-000350        *    O EMISSOR NAO RESPONDEU A TEMPO: A BANDEIRA DECIDIU COM OS
-000351        *    PARAMETROS DE STAND-IN E AVISA AGORA. O EMISSOR NAO DECIDE
-000352        *    DE NOVO: REGISTRA A DECISAO, ATUALIZA O LIMITE SE FOI
-GnuCOBOL 3.3-dev.0      sistema\work\CICAUTO Thu Nov 19 2026 12:55:17  Page 0010
+000301             ADD 1                     TO WS-SEQ-AUTORIZACAO
+000302             MOVE WS-SEQ-AUTORIZACAO   TO WS-COD-SEQ
+000303             MOVE WS-COD-GERADO        TO LG-COD-AUTORIZACAO
+000304             MOVE '00'                 TO LG-RESPOSTA
+000305             MOVE 'APROVADA'           TO LG-DESC-RESPOSTA
+000306             SUBTRACT PD-VALOR       FROM WS-CT-DISP(IX-CT)
+000307             ADD 1                     TO WS-QTD-APROVADAS
+000308             PERFORM 2350-REGISTRAR-APROVADA
+000309                THRU 2350-FIM-REGISTRAR-APROVADA
+000310             .
+000311         2300-FIM-APROVAR.
+000312             EXIT.
+000313
+000314         2350-REGISTRAR-APROVADA.
+000315        *    GUARDA A APROVADA PARA UMA EVENTUAL REVERSAO. A POSICAO NO
+000316        *    LOG E A PROXIMA, PORQUE O LOG DESTE PEDIDO AINDA VAI SER
+000317        *    GUARDADO NO 7000
+000318             ADD 1 TO WS-QTD-AP
+000319             IF WS-QTD-AP > WS-MAX-LOG
+000320                DISPLAY 'CICAUTOR - MAIS APROVADAS QUE O LIMITE'
+000321                PERFORM 9900-ENCERRAR-COM-ERRO
+000322             END-IF
+000323             MOVE PD-NUM-CARTAO      TO WS-AP-CARTAO(WS-QTD-AP)
+000324             MOVE LG-COD-AUTORIZACAO TO WS-AP-CODIGO(WS-QTD-AP)
+000325             MOVE PD-VALOR           TO WS-AP-VALOR(WS-QTD-AP)
+000326             COMPUTE WS-AP-POSICAO-LOG(WS-QTD-AP) = WS-QTD-LOG + 1
+000327             MOVE 'N'                TO WS-AP-REVERTIDA(WS-QTD-AP)
+000328             .
+000329         2350-FIM-REGISTRAR-APROVADA.
+000330             EXIT.
+000331
+000332         2400-AVISO-STANDIN.
+000333        *    O EMISSOR NAO RESPONDEU A TEMPO: A BANDEIRA DECIDIU COM OS
+000334        *    PARAMETROS DE STAND-IN E AVISA AGORA. O EMISSOR NAO DECIDE
+000335        *    DE NOVO: REGISTRA A DECISAO, ATUALIZA O LIMITE SE FOI
+000336        *    APROVADA E CONFIRMA O RECEBIMENTO (0130)
+000337             ADD 1 TO WS-QTD-STANDIN
+000338             MOVE '0130'               TO LG-MTI-RESPOSTA
+000339             SET LG-EM-STAND-IN        TO TRUE
+000340             MOVE PD-RESPOSTA-STANDIN  TO LG-RESPOSTA
+000341             MOVE PD-COD-AUT-ORIGINAL  TO LG-COD-AUTORIZACAO
+000342             IF LG-APROVADA
+000343                MOVE 'APROVADA EM STAND-IN' TO LG-DESC-RESPOSTA
+000344                IF WS-CONTA-ENCONTRADA
+000345                   SUBTRACT PD-VALOR FROM WS-CT-DISP(IX-CT)
+000346                END-IF
+000347                PERFORM 2350-REGISTRAR-APROVADA
+000348                   THRU 2350-FIM-REGISTRAR-APROVADA
+000349             ELSE
+000350                MOVE 'NEGADA EM STAND-IN'   TO LG-DESC-RESPOSTA
+000351             END-IF
+000352             .
+GnuCOBOL 3.3-dev.0      sistema\work\CICAUTO Mon Nov 23 2026 15:58:46  Page 0010
 
 LINE    PG/LN  A...B............................................................
 
-000353        *    APROVADA E CONFIRMA O RECEBIMENTO (0130)
-000354             ADD 1 TO WS-QTD-STANDIN
-000355             MOVE '0130'               TO LG-MTI-RESPOSTA
-000356             SET LG-EM-STAND-IN        TO TRUE
-000357             MOVE PD-RESPOSTA-STANDIN  TO LG-RESPOSTA
-000358             MOVE PD-COD-AUT-ORIGINAL  TO LG-COD-AUTORIZACAO
-000359             IF LG-APROVADA
-000360                MOVE 'APROVADA EM STAND-IN' TO LG-DESC-RESPOSTA
-000361                IF WS-CONTA-ENCONTRADA
-000362                   SUBTRACT PD-VALOR FROM WS-CT-DISP(IX-CT)
-000363                END-IF
-000364                PERFORM 2350-REGISTRAR-APROVADA
-000365                   THRU 2350-FIM-REGISTRAR-APROVADA
-000366             ELSE
-000367                MOVE 'NEGADA EM STAND-IN'   TO LG-DESC-RESPOSTA
-000368             END-IF
-000369             .
-000370         2400-FIM-AVISO-STANDIN.
-000371             EXIT.
-000372
-000373         2500-REVERTER.
-000374             IF PD-REVERSAO
-000375                MOVE '0410' TO LG-MTI-RESPOSTA
-000376             ELSE
-000377                MOVE '0430' TO LG-MTI-RESPOSTA
-000378             END-IF
-000379             MOVE PD-COD-AUT-ORIGINAL TO LG-COD-AUTORIZACAO
-000380        *    A ESCREVER (MAO NA MASSA): PROCURAR NA WS-TABELA-APROVADAS A
-000381        *    AUTORIZACAO ORIGINAL (MESMO CARTAO, MESMO CODIGO, AINDA NAO
-000382        *    REVERTIDA). SE ACHOU: MARCAR WS-AP-REVERTIDA, DEVOLVER O VALO
-000383        *    AO DISPONIVEL DA CONTA, MARCAR 'R' NA POSICAO 83 DO LOG GUARD
-000384        *    (WS-LG-REGISTRO(IX-LOG)(83:1)) E RESPONDER '00'.
-000385        *    SE NAO ACHOU: RESPONDER '25' (ORIGINAL NAO ENCONTRADA).
-000386             MOVE '25' TO LG-RESPOSTA
-000387             MOVE 'ORIGINAL NAO ENCONTRADA' TO LG-DESC-RESPOSTA
-000388             ADD 1 TO WS-QTD-REV-SEM-ORIG
-000389             .
-000390         2500-FIM-REVERTER.
-000391             EXIT.
-000392
-000393         3000-FINALIZAR.
-000394        *    GRAVA O LOG COMPLETO E AS CONTAS COM OS LIMITES ATUALIZADOS
-000395             PERFORM VARYING IX-LOG FROM 1 BY 1 UNTIL IX-LOG > WS-QTD-LOG
-000396                WRITE REG-LOG-AUTORIZACAO FROM WS-LG-REGISTRO(IX-LOG)
-000397                IF NOT WS-FS-LOG-OK
-000398                   DISPLAY 'CICAUTOR - ERRO DE WRITE NO LOGOUT FS: '
-000399                           WS-FS-LOG
-000400                   PERFORM 9900-ENCERRAR-COM-ERRO
-000401                END-IF
-000402             END-PERFORM
-000403             PERFORM VARYING IX-CT FROM 1 BY 1
-000404                     UNTIL IX-CT > WS-QTD-CONTAS
-GnuCOBOL 3.3-dev.0      sistema\work\CICAUTO Thu Nov 19 2026 12:55:17  Page 0011
+000353         2400-FIM-AVISO-STANDIN.
+000354             EXIT.
+000355
+000356         2500-REVERTER.
+000357        *    0400 (ESTORNO A PEDIDO OU REVERSAO POR TIME-OUT) E 0420
+000358        *    (AVISO DE REVERSAO): PROCURA A AUTORIZACAO ORIGINAL PELO
+000359        *    CARTAO E PELO CODIGO DE AUTORIZACAO
+000360             IF PD-REVERSAO
+000361                MOVE '0410' TO LG-MTI-RESPOSTA
+000362             ELSE
+000363                MOVE '0430' TO LG-MTI-RESPOSTA
+000364             END-IF
+000365             MOVE PD-COD-AUT-ORIGINAL TO LG-COD-AUTORIZACAO
+000366             SET WS-ORIGINAL-NAO-ENCONTRADA TO TRUE
+000367             PERFORM VARYING IX-AP FROM 1 BY 1
+000368                     UNTIL IX-AP > WS-QTD-AP OR WS-ORIGINAL-ENCONTRADA
+000369                IF WS-AP-CARTAO(IX-AP)    = PD-NUM-CARTAO
+000370               AND WS-AP-CODIGO(IX-AP)    = PD-COD-AUT-ORIGINAL
+000371               AND WS-AP-REVERTIDA(IX-AP) = 'N'
+000372                   SET WS-ORIGINAL-ENCONTRADA TO TRUE
+000373                   SET IX-LOG TO WS-AP-POSICAO-LOG(IX-AP)
+000374                   MOVE 'S' TO WS-AP-REVERTIDA(IX-AP)
+000375                   IF WS-CONTA-ENCONTRADA
+000376                      ADD WS-AP-VALOR(IX-AP) TO WS-CT-DISP(IX-CT)
+000377                   END-IF
+000378                END-IF
+000379             END-PERFORM
+000380             IF WS-ORIGINAL-ENCONTRADA
+000381        *       MARCA A ORIGINAL COMO REVERTIDA NO LOG GUARDADO (POSICAO
+000382        *       83, CAMPO LG-SITUACAO)
+000383                MOVE 'R' TO WS-LG-REGISTRO(IX-LOG)(83:1)
+000384                MOVE '00' TO LG-RESPOSTA
+000385                MOVE 'REVERSAO EFETUADA' TO LG-DESC-RESPOSTA
+000386                ADD 1 TO WS-QTD-REVERTIDAS
+000387             ELSE
+000388                MOVE '25' TO LG-RESPOSTA
+000389                MOVE 'ORIGINAL NAO ENCONTRADA' TO LG-DESC-RESPOSTA
+000390                ADD 1 TO WS-QTD-REV-SEM-ORIG
+000391             END-IF
+000392             .
+000393         2500-FIM-REVERTER.
+000394             EXIT.
+000395
+000396         3000-FINALIZAR.
+000397        *    GRAVA O LOG COMPLETO E AS CONTAS COM OS LIMITES ATUALIZADOS
+000398             PERFORM VARYING IX-LOG FROM 1 BY 1 UNTIL IX-LOG > WS-QTD-LOG
+000399                WRITE REG-LOG-AUTORIZACAO FROM WS-LG-REGISTRO(IX-LOG)
+000400                IF NOT WS-FS-LOG-OK
+000401                   DISPLAY 'CICAUTOR - ERRO DE WRITE NO LOGOUT FS: '
+000402                           WS-FS-LOG
+000403                   PERFORM 9900-ENCERRAR-COM-ERRO
+000404                END-IF
+GnuCOBOL 3.3-dev.0      sistema\work\CICAUTO Mon Nov 23 2026 15:58:46  Page 0011
 
 LINE    PG/LN  A...B............................................................
 
-000405        *       O DISPONIVEL FICA NAS POSICOES 38 A 49 DO CPCONTA
-000406                MOVE WS-CT-REGISTRO(IX-CT) TO REG-CONTA-SAIDA
-000407                MOVE WS-CT-DISP(IX-CT)     TO WS-DISP-SAIDA
-000408                MOVE WS-DISP-SAIDA-X       TO REG-CONTA-SAIDA(38:12)
-000409                WRITE REG-CONTA-SAIDA
-000410                IF NOT WS-FS-COU-OK
-000411                   DISPLAY 'CICAUTOR - ERRO DE WRITE NO CONTOUT FS: '
-000412                           WS-FS-CONTOUT
-000413                   PERFORM 9900-ENCERRAR-COM-ERRO
-000414                END-IF
-000415             END-PERFORM
-000416             CLOSE PEDIDOS LOG-AUTORIZ CONTAS-SAIDA
-000417
-000418             DISPLAY 'CICAUTOR - PEDIDOS LIDOS ......: ' WS-QTD-LIDOS
-000419             DISPLAY 'CICAUTOR - APROVADAS (00) .....: ' WS-QTD-APROVADAS
-000420             DISPLAY 'CICAUTOR - NEGADAS ............: ' WS-QTD-NEGADAS
-000421             DISPLAY 'CICAUTOR -   05 NAO AUTORIZADA : ' WS-QTD-05
-000422             DISPLAY 'CICAUTOR -   14 CARTAO INVALIDO: ' WS-QTD-14
-000423             DISPLAY 'CICAUTOR -   51 SEM LIMITE ....: ' WS-QTD-51
-000424             DISPLAY 'CICAUTOR -   54 VENCIDO .......: ' WS-QTD-54
-000425             DISPLAY 'CICAUTOR -   55 SENHA .........: ' WS-QTD-55
-000426             DISPLAY 'CICAUTOR -   57 NAO PERMITIDA .: ' WS-QTD-57
-000427             DISPLAY 'CICAUTOR -   61 LIMITE SAQUE ..: ' WS-QTD-61
-000428             DISPLAY 'CICAUTOR - AVISOS DE STAND-IN .: ' WS-QTD-STANDIN
-000429             DISPLAY 'CICAUTOR - REVERSOES EFETUADAS : ' WS-QTD-REVERTIDAS
-000430             DISPLAY 'CICAUTOR - REVERSOES SEM ORIG. : '
-000431                     WS-QTD-REV-SEM-ORIG
-000432             DISPLAY 'CICAUTOR - REGISTROS NO LOG ...: ' WS-QTD-LOG
-000433        *    CONFERENCIA: CADA PEDIDO GERA UM REGISTRO NO LOG
-000434             IF WS-QTD-LIDOS NOT = WS-QTD-LOG
-000435                DISPLAY 'CICAUTOR - CONTADORES NAO FECHAM'
-000436                MOVE 16 TO RETURN-CODE
-000437             ELSE
-000438                MOVE 0 TO RETURN-CODE
-000439             END-IF
-000440             .
-000441         3000-FIM-FINALIZAR.
-000442             EXIT.
-000443
-000444         7000-GUARDAR-LOG.
-000445             ADD 1 TO WS-QTD-LOG
-000446             IF WS-QTD-LOG > WS-MAX-LOG
-000447                DISPLAY 'CICAUTOR - MAIS PEDIDOS QUE O LIMITE DO LOG'
-000448                PERFORM 9900-ENCERRAR-COM-ERRO
-000449             END-IF
-000450             MOVE REG-LOG-AUTORIZACAO TO WS-LG-REGISTRO(WS-QTD-LOG)
-000451             .
-000452         7000-FIM-GUARDAR-LOG.
-000453             EXIT.
-000454
-000455         8000-LER-PEDIDO.
-000456             READ PEDIDOS
-GnuCOBOL 3.3-dev.0      sistema\work\CICAUTO Thu Nov 19 2026 12:55:17  Page 0012
+000405             END-PERFORM
+000406             PERFORM VARYING IX-CT FROM 1 BY 1
+000407                     UNTIL IX-CT > WS-QTD-CONTAS
+000408        *       O DISPONIVEL FICA NAS POSICOES 38 A 49 DO CPCONTA
+000409                MOVE WS-CT-REGISTRO(IX-CT) TO REG-CONTA-SAIDA
+000410                MOVE WS-CT-DISP(IX-CT)     TO WS-DISP-SAIDA
+000411                MOVE WS-DISP-SAIDA-X       TO REG-CONTA-SAIDA(38:12)
+000412                WRITE REG-CONTA-SAIDA
+000413                IF NOT WS-FS-COU-OK
+000414                   DISPLAY 'CICAUTOR - ERRO DE WRITE NO CONTOUT FS: '
+000415                           WS-FS-CONTOUT
+000416                   PERFORM 9900-ENCERRAR-COM-ERRO
+000417                END-IF
+000418             END-PERFORM
+000419             CLOSE PEDIDOS LOG-AUTORIZ CONTAS-SAIDA
+000420
+000421             DISPLAY 'CICAUTOR - PEDIDOS LIDOS ......: ' WS-QTD-LIDOS
+000422             DISPLAY 'CICAUTOR - APROVADAS (00) .....: ' WS-QTD-APROVADAS
+000423             DISPLAY 'CICAUTOR - NEGADAS ............: ' WS-QTD-NEGADAS
+000424             DISPLAY 'CICAUTOR -   05 NAO AUTORIZADA : ' WS-QTD-05
+000425             DISPLAY 'CICAUTOR -   14 CARTAO INVALIDO: ' WS-QTD-14
+000426             DISPLAY 'CICAUTOR -   51 SEM LIMITE ....: ' WS-QTD-51
+000427             DISPLAY 'CICAUTOR -   54 VENCIDO .......: ' WS-QTD-54
+000428             DISPLAY 'CICAUTOR -   55 SENHA .........: ' WS-QTD-55
+000429             DISPLAY 'CICAUTOR -   57 NAO PERMITIDA .: ' WS-QTD-57
+000430             DISPLAY 'CICAUTOR -   61 LIMITE SAQUE ..: ' WS-QTD-61
+000431             DISPLAY 'CICAUTOR - AVISOS DE STAND-IN .: ' WS-QTD-STANDIN
+000432             DISPLAY 'CICAUTOR - REVERSOES EFETUADAS : ' WS-QTD-REVERTIDAS
+000433             DISPLAY 'CICAUTOR - REVERSOES SEM ORIG. : '
+000434                     WS-QTD-REV-SEM-ORIG
+000435             DISPLAY 'CICAUTOR - REGISTROS NO LOG ...: ' WS-QTD-LOG
+000436        *    CONFERENCIA: CADA PEDIDO GERA UM REGISTRO NO LOG
+000437             IF WS-QTD-LIDOS NOT = WS-QTD-LOG
+000438                DISPLAY 'CICAUTOR - CONTADORES NAO FECHAM'
+000439                MOVE 16 TO RETURN-CODE
+000440             ELSE
+000441                MOVE 0 TO RETURN-CODE
+000442             END-IF
+000443             .
+000444         3000-FIM-FINALIZAR.
+000445             EXIT.
+000446
+000447         7000-GUARDAR-LOG.
+000448             ADD 1 TO WS-QTD-LOG
+000449             IF WS-QTD-LOG > WS-MAX-LOG
+000450                DISPLAY 'CICAUTOR - MAIS PEDIDOS QUE O LIMITE DO LOG'
+000451                PERFORM 9900-ENCERRAR-COM-ERRO
+000452             END-IF
+000453             MOVE REG-LOG-AUTORIZACAO TO WS-LG-REGISTRO(WS-QTD-LOG)
+000454             .
+000455         7000-FIM-GUARDAR-LOG.
+000456             EXIT.
+GnuCOBOL 3.3-dev.0      sistema\work\CICAUTO Mon Nov 23 2026 15:58:46  Page 0012
 
 LINE    PG/LN  A...B............................................................
 
-000457                  AT END
-000458                     CONTINUE
-000459                  NOT AT END
-000460                     ADD 1 TO WS-QTD-LIDOS
-000461             END-READ
-000462             IF NOT WS-FS-PED-OK AND NOT WS-FS-PED-FIM
-000463                DISPLAY 'CICAUTOR - ERRO DE READ PEDIDOS FS: '
-000464                        WS-FS-PEDIDO
-000465                PERFORM 9900-ENCERRAR-COM-ERRO
-000466             END-IF
-000467             .
-000468         8000-FIM-LER-PEDIDO.
-000469             EXIT.
-000470
-000471         9900-ENCERRAR-COM-ERRO.
-000472        *    ENCERRA COM RC 16 PARA IMPEDIR OS STEPS SEGUINTES
-000473             MOVE 16 TO RETURN-CODE
-000474             STOP RUN
-000475             .
+000457
+000458         8000-LER-PEDIDO.
+000459             READ PEDIDOS
+000460                  AT END
+000461                     CONTINUE
+000462                  NOT AT END
+000463                     ADD 1 TO WS-QTD-LIDOS
+000464             END-READ
+000465             IF NOT WS-FS-PED-OK AND NOT WS-FS-PED-FIM
+000466                DISPLAY 'CICAUTOR - ERRO DE READ PEDIDOS FS: '
+000467                        WS-FS-PEDIDO
+000468                PERFORM 9900-ENCERRAR-COM-ERRO
+000469             END-IF
+000470             .
+000471         8000-FIM-LER-PEDIDO.
+000472             EXIT.
+000473
+000474         9900-ENCERRAR-COM-ERRO.
+000475        *    ENCERRA COM RC 16 PARA IMPEDIR OS STEPS SEGUINTES
+000476             MOVE 16 TO RETURN-CODE
+000477             STOP RUN
+000478             .
 
 
 0 warnings in compilation group

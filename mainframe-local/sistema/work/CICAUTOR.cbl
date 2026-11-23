@@ -1,5 +1,5 @@
       *================================================================*
-      * PROGRAMA : CICAUTOR (ESQUELETO DA TURMA)                       *
+      * PROGRAMA : CICAUTOR                                            *
       * AULA     : 2 - AUTORIZACAO E CAPTURA                           *
       * OBJETIVO : SIMULAR EM BATCH A AUTORIZACAO DO EMISSOR. PARA     *
       *            CADA PEDIDO, NA ORDEM EM QUE CHEGOU:                *
@@ -17,9 +17,6 @@
       * SAIDAS   : DD LOGOUT   - CPAUTLOG, FB 120                      *
       *            DD CONTOUT  - CPCONTA, FB 80 (LIMITES ATUALIZADOS)  *
       * RETORNO  : 0 = OK, 16 = ERRO DE ARQUIVO OU DE TABELA           *
-      * A ESCREVER NA AULA 2:                                          *
-      * 2200-DECIDIR (AO VIVO, COM A TURMA)                            *
-      * 2500-REVERTER (MAO NA MASSA)                                   *
       *================================================================*
        IDENTIFICATION DIVISION.
        PROGRAM-ID. CICAUTOR.
@@ -250,63 +247,49 @@
            ELSE
               MOVE '0210' TO LG-MTI-RESPOSTA
            END-IF
-
+      *    AS REGRAS DO EMISSOR, NA ORDEM. A PRIMEIRA QUE FALHA DECIDE
            EVALUATE TRUE
               WHEN WS-CONTA-NAO-ENCONTRADA
                  MOVE '14' TO LG-RESPOSTA
-                 MOVE 'CARTAO INEXISTENTE'
-                   TO LG-DESC-RESPOSTA
+                 MOVE 'CARTAO INEXISTENTE' TO LG-DESC-RESPOSTA
                  ADD 1 TO WS-QTD-14
-
-              WHEN WS-CT-VALIDADE(IX-CT) < PD-ANO-MES
-                 MOVE '54' TO LG-RESPOSTA
-                 MOVE 'CARTAO VENCIDO'
-                   TO LG-DESC-RESPOSTA
-                 ADD 1 TO WS-QTD-54
-
               WHEN WS-CT-STATUS(IX-CT) NOT = 'A'
                  MOVE '05' TO LG-RESPOSTA
-                 MOVE 'CARTAO BLOQUEADO'
-                   TO LG-DESC-RESPOSTA
+                 MOVE 'CARTAO BLOQUEADO OU CANCELADO'
+                                           TO LG-DESC-RESPOSTA
                  ADD 1 TO WS-QTD-05
-
+              WHEN WS-CT-VALIDADE(IX-CT) < PD-ANO-MES
+                 MOVE '54' TO LG-RESPOSTA
+                 MOVE 'CARTAO VENCIDO'     TO LG-DESC-RESPOSTA
+                 ADD 1 TO WS-QTD-54
               WHEN PD-CODIGO-NAO-CONFERE
                  MOVE '05' TO LG-RESPOSTA
                  MOVE 'CODIGO DE SEGURANCA NAO CONFERE'
-                   TO LG-DESC-RESPOSTA
+                                           TO LG-DESC-RESPOSTA
                  ADD 1 TO WS-QTD-05
-
               WHEN PD-SENHA-NAO-CONFERE
                  MOVE '55' TO LG-RESPOSTA
-                 MOVE 'SENHA NAO CONFERE'
-                   TO LG-DESC-RESPOSTA
+                 MOVE 'SENHA INCORRETA'    TO LG-DESC-RESPOSTA
                  ADD 1 TO WS-QTD-55
-
-              WHEN WS-CT-EXTERIOR(IX-CT) NOT = 'S'
-                   AND NOT PD-NACIONAL
+              WHEN NOT PD-NACIONAL
+               AND WS-CT-EXTERIOR(IX-CT) NOT = 'S'
                  MOVE '57' TO LG-RESPOSTA
-                 MOVE 'EXTERIOR SEM HABILITACAO'
-                   TO LG-DESC-RESPOSTA
+                 MOVE 'USO NO EXTERIOR NAO HABILITADO'
+                                           TO LG-DESC-RESPOSTA
                  ADD 1 TO WS-QTD-57
-
-              WHEN PD-SAQUE AND
-                   PD-VALOR > WS-CT-SAQUE(IX-CT)
+              WHEN PD-SAQUE AND PD-VALOR > WS-CT-SAQUE(IX-CT)
                  MOVE '61' TO LG-RESPOSTA
-                 MOVE 'SAQUE ACIMA DO LIMITE DE SAQUE'
-                   TO LG-DESC-RESPOSTA
+                 MOVE 'ACIMA DO LIMITE DE SAQUE'
+                                           TO LG-DESC-RESPOSTA
                  ADD 1 TO WS-QTD-61
-
               WHEN PD-VALOR > WS-CT-DISP(IX-CT)
                  MOVE '51' TO LG-RESPOSTA
-                 MOVE 'VALOR ACIMA DO DISPONIVEL'
-                   TO LG-DESC-RESPOSTA
+                 MOVE 'LIMITE OU SALDO INSUFICIENTE'
+                                           TO LG-DESC-RESPOSTA
                  ADD 1 TO WS-QTD-51
-
               WHEN OTHER
-                 PERFORM 2300-APROVAR
-                   THRU 2300-FIM-APROVAR
+                 PERFORM 2300-APROVAR THRU 2300-FIM-APROVAR
            END-EVALUATE
-
            IF NOT LG-APROVADA
               ADD 1 TO WS-QTD-NEGADAS
            END-IF
@@ -371,21 +354,41 @@
            EXIT.
 
        2500-REVERTER.
+      *    0400 (ESTORNO A PEDIDO OU REVERSAO POR TIME-OUT) E 0420
+      *    (AVISO DE REVERSAO): PROCURA A AUTORIZACAO ORIGINAL PELO
+      *    CARTAO E PELO CODIGO DE AUTORIZACAO
            IF PD-REVERSAO
               MOVE '0410' TO LG-MTI-RESPOSTA
            ELSE
               MOVE '0430' TO LG-MTI-RESPOSTA
            END-IF
            MOVE PD-COD-AUT-ORIGINAL TO LG-COD-AUTORIZACAO
-      *    A ESCREVER (MAO NA MASSA): PROCURAR NA WS-TABELA-APROVADAS A
-      *    AUTORIZACAO ORIGINAL (MESMO CARTAO, MESMO CODIGO, AINDA NAO
-      *    REVERTIDA). SE ACHOU: MARCAR WS-AP-REVERTIDA, DEVOLVER O VALOR
-      *    AO DISPONIVEL DA CONTA, MARCAR 'R' NA POSICAO 83 DO LOG GUARDADO
-      *    (WS-LG-REGISTRO(IX-LOG)(83:1)) E RESPONDER '00'.
-      *    SE NAO ACHOU: RESPONDER '25' (ORIGINAL NAO ENCONTRADA).
-           MOVE '25' TO LG-RESPOSTA
-           MOVE 'ORIGINAL NAO ENCONTRADA' TO LG-DESC-RESPOSTA
-           ADD 1 TO WS-QTD-REV-SEM-ORIG
+           SET WS-ORIGINAL-NAO-ENCONTRADA TO TRUE
+           PERFORM VARYING IX-AP FROM 1 BY 1
+                   UNTIL IX-AP > WS-QTD-AP OR WS-ORIGINAL-ENCONTRADA
+              IF WS-AP-CARTAO(IX-AP)    = PD-NUM-CARTAO
+             AND WS-AP-CODIGO(IX-AP)    = PD-COD-AUT-ORIGINAL
+             AND WS-AP-REVERTIDA(IX-AP) = 'N'
+                 SET WS-ORIGINAL-ENCONTRADA TO TRUE
+                 SET IX-LOG TO WS-AP-POSICAO-LOG(IX-AP)
+                 MOVE 'S' TO WS-AP-REVERTIDA(IX-AP)
+                 IF WS-CONTA-ENCONTRADA
+                    ADD WS-AP-VALOR(IX-AP) TO WS-CT-DISP(IX-CT)
+                 END-IF
+              END-IF
+           END-PERFORM
+           IF WS-ORIGINAL-ENCONTRADA
+      *       MARCA A ORIGINAL COMO REVERTIDA NO LOG GUARDADO (POSICAO
+      *       83, CAMPO LG-SITUACAO)
+              MOVE 'R' TO WS-LG-REGISTRO(IX-LOG)(83:1)
+              MOVE '00' TO LG-RESPOSTA
+              MOVE 'REVERSAO EFETUADA' TO LG-DESC-RESPOSTA
+              ADD 1 TO WS-QTD-REVERTIDAS
+           ELSE
+              MOVE '25' TO LG-RESPOSTA
+              MOVE 'ORIGINAL NAO ENCONTRADA' TO LG-DESC-RESPOSTA
+              ADD 1 TO WS-QTD-REV-SEM-ORIG
+           END-IF
            .
        2500-FIM-REVERTER.
            EXIT.
