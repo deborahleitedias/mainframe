@@ -195,7 +195,8 @@
            INITIALIZE WS-CONTROLE
            MOVE 'A' TO WS-CTL-BANDEIRA(1)
            MOVE 'B' TO WS-CTL-BANDEIRA(2)
-           MOVE 'N' TO WS-CTL-TEM-TRAILER(1) WS-CTL-TEM-TRAILER(2)
+           MOVE 'N' TO WS-CTL-TEM-TRAILER(1)
+                        WS-CTL-TEM-TRAILER(2)
            SET WS-TOTAIS-OK TO TRUE
            OPEN INPUT CLEARING
            IF NOT WS-FS-CLR-OK
@@ -234,12 +235,36 @@
            END-PERFORM
            CLOSE CLEARING
 
-      *    A ESCREVER (MAO NA MASSA): PARA CADA BANDEIRA (IX-CTL DE 1 A 2),
-      *    MOSTRAR A QUANTIDADE DOS DETALHES E A DO TRAILER E MARCAR
-      *    WS-TOTAIS-ERRADOS SE NAO HOUVE TRAILER OU SE A QUANTIDADE OU O
-      *    VALOR NAO BATEM. COM ISSO, UM ARQUIVO ERRADO NAO E PROCESSADO.
+      *    CONFERENCIA DOS TOTAIS DAS BANDEIRAS
            DISPLAY 'CICCLEAR - DATA DE PROCESSAMENTO: '
                    WS-DATA-PROCESSAMENTO
+
+           PERFORM VARYING IX-CTL FROM 1 BY 1
+                   UNTIL IX-CTL > 2
+
+              DISPLAY 'BANDEIRA: '
+                      WS-CTL-BANDEIRA(IX-CTL)
+
+              DISPLAY 'QTD. DETALHES: '
+                      WS-CTL-QTD-DET(IX-CTL)
+
+              DISPLAY 'QTD. TRAILER: '
+                      WS-CTL-QTD-TRL(IX-CTL)
+
+              IF WS-CTL-TEM-TRAILER(IX-CTL) NOT = 'S'
+                 SET WS-TOTAIS-ERRADOS TO TRUE
+              ELSE
+                 IF WS-CTL-QTD-DET(IX-CTL) NOT =
+                    WS-CTL-QTD-TRL(IX-CTL)
+                    OR
+                    WS-CTL-VALOR-DET(IX-CTL) NOT =
+                    WS-CTL-VALOR-TRL(IX-CTL)
+
+                    SET WS-TOTAIS-ERRADOS TO TRUE
+                 END-IF
+              END-IF
+
+           END-PERFORM
            .
        1100-FIM-CONFERIR-TRAILERS.
            EXIT.
